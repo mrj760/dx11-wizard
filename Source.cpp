@@ -1,4 +1,4 @@
-#include "ErrorLogger.h"
+#include "RenderWindow.h"
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "DirectXTK.lib")
 
@@ -23,7 +23,13 @@ int APIENTRY wWinMain(
 	//	//ErrorLogger::Log(hr, "Test Success"); // Logs the error of a successful HRESULT
 	//}
 
-
+	// Create and initialize window
+	RenderWindow rw;
+	rw.Initialize(hInstance, "Title", "MyWindowClass", 800, 600);
+	while (rw.ProcessMessages())	// keep going until our message processor says the window has been closed
+	{
+		Sleep(50);
+	}
 
 
 	

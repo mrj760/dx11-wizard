@@ -45,11 +45,45 @@ bool RenderWindow::Initialize(HINSTANCE hInstance, std::string window_title, std
 
 bool RenderWindow::ProcessMessages()
 {
-	return false;
+	MSG msg;
+	ZeroMemory(&msg, sizeof(MSG));
+
+	// read in the message
+	if (PeekMessage(&msg, this->handle, 0, 0, PM_REMOVE)) // See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644943(v=vs.85).aspx
+		// PeekMessage rather than GetMessage because Peek does not lock
+		// takes : ( address of the message (where to store it), the handle to the window we're checking messages for, 
+		//			min filter msg value, max filter msg value (we'ere not filtering), 
+		//			how to handle the message : remove message after capturing it via PeekMessage (see: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644943(v=vs.85).aspx)
+	{
+		TranslateMessage(&msg); // Translates key messages to char messages (See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644955(v=vs.85).aspx)
+		DispatchMessage(&msg);	// Send the message to default window's processing funciton. (See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644934(v=vs.85).aspx)
+	}
+
+	// check if window was closed after reading a message
+	if (msg.message == WM_NULL) // Not WM_QUIT so that we can account for more than one window
+	{
+		// since message might be null despite the window not being closed...
+		// check if the handle is a window
+		if (!IsWindow(this->handle))
+		{
+			// window was destroyed. make handle null and unregister class.
+			// Destruciton is called automatically.
+			this->handle = NULL;
+			UnregisterClass(this->window_class_wide.c_str(), this->hInstance);
+			return false;
+		}
+	}
+
+	return true;
 }
 
 RenderWindow::~RenderWindow()
 {
+	if (this->handle != NULL)
+	{
+		UnregisterClass(this->window_class_wide.c_str(), this->hInstance);
+		DestroyWindow(handle);
+	}
 }
 
 void RenderWindow::RegisterWindowClass()
