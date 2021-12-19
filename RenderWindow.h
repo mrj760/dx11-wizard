@@ -1,10 +1,13 @@
 #pragma once
 #include "ErrorLogger.h"
+
+class WindowContainer; // forward decl to avoid ciruclar includes
+
 class RenderWindow
 {
 public:
 	// Initialized the window by taking: (Application instance, title, windows' class name, x size, y size)
-	bool Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height);
+	bool Initialize(WindowContainer* pWindowContainer, HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height);
 	// Dispatches "messages" (e.g. you press a key or move your mouse) to a function which will handle the messages
 	// If this returns false, the window will be closed.
 	// If this returns true, keep going through the ProcessMessage loop

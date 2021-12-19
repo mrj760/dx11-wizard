@@ -1,4 +1,4 @@
-#include "RenderWindow.h"
+#include "Engine.h"
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "DirectXTK.lib")
 
@@ -24,9 +24,9 @@ int APIENTRY wWinMain(
 	//}
 
 	// Create and initialize window
-	RenderWindow rw;
-	rw.Initialize(hInstance, "Title", "MyWindowClass", 800, 600);
-	while (rw.ProcessMessages())	// keep going until our message processor says the window has been closed
+	Engine engine;
+	engine.Initialize(hInstance, "Title", "MyWindowClass", 800, 600);
+	while (engine.ProcessMessages())	// keep processing messages from our render window until our message processor says the window has been closed
 	{
 		Sleep(50);
 	}
