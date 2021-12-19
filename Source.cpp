@@ -28,7 +28,7 @@ int APIENTRY wWinMain(
 	engine.Initialize(hInstance, "Title", "MyWindowClass", 800, 600);
 	while (engine.ProcessMessages())	// keep processing messages from our render window until our message processor says the window has been closed
 	{
-		Sleep(50);
+		engine.Update();
 	}
 
 
