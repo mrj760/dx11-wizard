@@ -48,8 +48,8 @@ bool RenderWindow::ProcessMessages()
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 
-	// read in the message
-	if (PeekMessage(&msg, this->handle, 0, 0, PM_REMOVE)) // See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644943(v=vs.85).aspx
+	// read in all messages which may be in queue at once
+	while (PeekMessage(&msg, this->handle, 0, 0, PM_REMOVE)) // See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms644943(v=vs.85).aspx
 		// PeekMessage rather than GetMessage because Peek does not lock
 		// takes : ( address of the message (where to store it), the handle to the window we're checking messages for, 
 		//			min filter msg value, max filter msg value (we'ere not filtering), 

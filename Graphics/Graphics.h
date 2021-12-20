@@ -4,8 +4,8 @@
 class Graphics
 {
 public:
-	// returns whether initialization of DirectX was successful
-	bool initialize(HWND hwnd, int width, int height);
+	bool initialize(HWND hwnd, int width, int height); // returns whether initialization of DirectX was successful
+	void RenderFrame();
 private:
 	bool initializeDirectX(HWND hwnd, int width, int height); // does the actual initialization
 

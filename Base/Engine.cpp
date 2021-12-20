@@ -55,12 +55,17 @@ void Engine::Update()
 		}*/
 
 		// Raw input Test
-		if (me.getType() == MouseEvent::EventType::RAW_MOVE)
+		/*if (me.getType() == MouseEvent::EventType::RAW_MOVE)
 		{
 			std::string outmsg =
 				"X: " + std::to_string(me.getPosX()) +
 				"Y: " + std::to_string(me.getPosY()) + "\n";
 			OutputDebugStringA(outmsg.c_str());
-		}
+		}*/
 	}
+}
+
+void Engine::RenderFrame()
+{
+	gfx.RenderFrame();
 }
