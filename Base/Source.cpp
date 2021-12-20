@@ -34,3 +34,11 @@ int APIENTRY wWinMain(
 	
 	return 0;
 }
+
+// INPUT ASSEMBLER: Must setup
+// Must describe input layout of vertex layout
+
+// VERTEX SHADER:	Must program
+// RASTERIZER:		Must setup
+// PIXEL SHADER:	Must program
+// OUTPUT MERGER:	Must setup

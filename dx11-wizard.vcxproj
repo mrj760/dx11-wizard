@@ -172,6 +172,7 @@
     <ClInclude Include="Base\RenderWindow.h" />
     <ClInclude Include="Base\StringConverter.h" />
     <ClInclude Include="Base\WindowContainer.h" />
+    <ClInclude Include="Graphics\Vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

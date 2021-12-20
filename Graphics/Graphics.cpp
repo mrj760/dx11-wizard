@@ -3,13 +3,15 @@
 bool Graphics::initialize(HWND hwnd, int width, int height)
 {
 	if (!initializeDirectX(hwnd, width, height))
-	{
 		return false;
-	}
+
+	if (!initializeShaders())
+		return false;
+
 	return true;
 }
 
-void Graphics::RenderFrame()
+void Graphics::renderFrame()
 {
 	// Determine what background color will be
 	float bgcolor[] = { 0,0,1.0f,1.0f }; // (RGBa: 0,0,1,1) : Blue
@@ -19,6 +21,43 @@ void Graphics::RenderFrame()
 
 	// present it
 	this->swapChain->Present(1 /*Vsync on (1 sync interval)*/, NULL/*Null flags*/);
+}
+
+bool Graphics::initializeShaders()
+{
+	D3D11_INPUT_ELEMENT_DESC layout[] =
+	{
+		{"POSITION",
+		0 /* specify 0 in case 2 semantics have the same name
+			(useful in instancing when passing matrices to input layout) */,
+		DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, /* Format of the data (2 32-bit floats)
+									(if we were using 3 32-bit floats we add B32 after G32)
+									likewise, can add A32 after B32 */
+		0, /* Input Slot */
+		0, /* Offset */ // Can also use Macro Magic instead of 0: D3D11_APPEND_ALIGNED_ELEMENT
+		D3D11_INPUT_PER_VERTEX_DATA, /* Input Slot Class (Either vertex data or instance data) */
+		0 /* Instance data step rate: # of instances to draw using same per-instance data before advancing in the buffer by one element */
+		}
+	};
+
+
+	UINT numElements = ARRAYSIZE(layout);
+
+	// Create input layout with above information
+	HRESULT hr = this->device->CreateInputLayout(
+		layout,	// Input layout
+		numElements, // number of elements in the input layout
+		vertex_shader_buffer->GetBufferPointer(), // Shader byte code width input signature (?)
+		vertex_shader_buffer->GetBufferSize(), // Byte code length
+		this->inputLayout.GetAddressOf() // pointer to address of input layout
+		);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log("Failed to create input layout");
+		return false;
+	}
+
+	return true;
 }
 
 bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
