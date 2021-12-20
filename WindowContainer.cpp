@@ -1,4 +1,29 @@
 #include "WindowContainer.h"
+#include <memory>
+
+WindowContainer::WindowContainer()
+{
+	// Create Raw Input Device
+	static bool raw_input_initialized = false; // only want to do this once so static
+	if (!raw_input_initialized)
+	{
+		RAWINPUTDEVICE rid;
+
+		rid.usUsagePage = 0x01; // mouse
+		rid.usUsage = 0x02;	
+		rid.dwFlags = 0; // default flags
+		rid.hwndTarget = NULL; // window handle follows keyboard focus
+		
+		// Try to register the raw input device with the above data
+		if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
+		{
+			ErrorLogger::Log(GetLastError(), "Failed to Reigster Raw Input Devices.");
+			exit(-1);
+		}
+
+		raw_input_initialized = true;
+	}
+}
 
 // Processes messages sent to the window
 LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -50,6 +75,7 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 	// END Keyboard Messages
 
 	//Mouse Messages
+	// Take in position data and call appropriae MouseClass functions
 	case WM_MOUSEMOVE:
 	{
 		int x = LOWORD(lParam);
@@ -111,6 +137,32 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 		else break;
 
 		return 0;
+	}
+	case WM_INPUT:
+	{
+		UINT dataSize;
+
+		// get the data size of the raw input from lParam
+		GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, NULL, &dataSize, sizeof(RAWINPUTHEADER));
+
+		// don't wanna do things if there's no data
+		if (dataSize > 0)
+		{
+			// point to the raw data
+			std::unique_ptr<BYTE[]> rawdata = std::make_unique<BYTE[]>(dataSize);
+			// see if the input is equal to the raw data we are expecting
+			if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, rawdata.get(), &dataSize, sizeof(RAWINPUTHEADER)) == dataSize);
+			{
+				// send the raw input data to our mouse class
+				RAWINPUT* raw = reinterpret_cast<RAWINPUT*>(rawdata.get());
+				if (raw->header.dwType == RIM_TYPEMOUSE)
+				{
+					mouse.rawMove(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+				}
+			}
+		}
+
+		return DefWindowProc(hwnd, uMsg, wParam, lParam); // system must perform necessary clean-up
 	}
 	// END Mouse Messages
 

@@ -19,4 +19,14 @@ MouseEvent::MousePoint MouseEvent::getPos() const
 	return { this->x, this->y };
 }
 
+int MouseEvent::getPosX() const
+{
+	return this->x;
+}
+
+int MouseEvent::getPosY() const
+{
+	return this->y;
+}
+
 

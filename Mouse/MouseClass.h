@@ -17,6 +17,7 @@ public:
 	void wheelUp(const int &x, const int &y);
 	void wheelDown(const int &x, const int &y);
 	void moved(const int &x, const int &y);
+	void rawMove(const int &x, const int &y);
 
 	bool isLeftDown();
 	bool isMiddleDown();

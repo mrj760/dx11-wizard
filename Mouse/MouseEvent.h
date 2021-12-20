@@ -20,7 +20,7 @@ public:
 		WheelUp,
 		WheelDown,
 		Move,
-		Raw_MOVE,
+		RAW_MOVE,
 		Invalid
 	};
 
@@ -30,6 +30,8 @@ public:
 	bool isValid() const;
 	EventType getType() const;
 	MousePoint getPos() const;
+	int getPosX() const;
+	int getPosY() const;
 
 private:
 	EventType type;

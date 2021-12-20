@@ -98,3 +98,8 @@ void MouseClass::moved(const int& x, const int& y)
 {
 	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::Move, x, y));
 }
+
+void MouseClass::rawMove(const int& x, const int& y)
+{
+	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::RAW_MOVE, x, y));
+}
