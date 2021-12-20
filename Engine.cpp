@@ -22,5 +22,26 @@ void Engine::Update()
 	{
 		KeyboardEvent kbe = keyboard.readKey();
 		unsigned char key = kbe.getKeyCode();
+		
+	}
+
+	while (/*Mouse event buffer is NOT empty*/!mouse.isEventBufferEmpty())
+	{
+		MouseEvent me = mouse.readEvent();
+		// Move Test
+		/*std::string outmsg = 
+			"X: " + std::to_string(me.getPos().x) +
+			"Y: " + std::to_string(me.getPos().y) + "\n";
+		OutputDebugStringA(outmsg.c_str());*/
+
+		// Scroll Test
+		if (me.getType() == MouseEvent::EventType::WheelUp)
+		{
+			OutputDebugStringA("Scroll up\n");
+		}
+		else if (me.getType() == MouseEvent::EventType::WheelDown)
+		{
+			OutputDebugStringA("Scroll Down\n");
+		}
 	}
 }
