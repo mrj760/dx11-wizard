@@ -1,7 +1,8 @@
 #pragma once
 #include "RenderWindow.h"
-#include "Keyboard/KeyboardClass.h"
-#include "Mouse/MouseClass.h"
+#include "../Keyboard/KeyboardClass.h"
+#include "../Mouse/MouseClass.h"
+#include "../Graphics/Graphics.h"
 
 // This class will be inherited by other classes that have windows tied to them
 class WindowContainer
@@ -13,6 +14,7 @@ protected:
 	RenderWindow render_window;
 	KeyboardClass keyboard;
 	MouseClass mouse;
+	Graphics gfx;
 private:
 };
 

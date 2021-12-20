@@ -77,6 +77,11 @@ bool RenderWindow::ProcessMessages()
 	return true;
 }
 
+HWND RenderWindow::getHWND()
+{
+	return this->handle;
+}
+
 RenderWindow::~RenderWindow()
 {
 	if (this->handle != NULL)

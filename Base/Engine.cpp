@@ -3,7 +3,17 @@
 bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height)
 {
 	//keyboard.setAutoRepeatChars(true);
-	return this->render_window.Initialize(this, hInstance, window_title, window_class, width, height);
+	if /* we fail to initialize our render window or our graphics, return false*/
+	(!this->render_window.Initialize
+		(this, hInstance, window_title, window_class, width, height) ||
+	(!gfx.initialize
+		(this->render_window.getHWND(), width, height)))
+	{
+		return false;
+	}
+
+	/* initializations successful */
+	return true;
 }
 
 bool Engine::ProcessMessages()

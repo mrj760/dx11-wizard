@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Base">
       <UniqueIdentifier>{38fb1846-5638-444f-8e90-e3a8d3e00db8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{6c39b938-b581-46f0-81be-8940dedfaee6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{c2c2416a-c537-47e8-8022-b7274f4b8182}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Keyboard\KeyboardEvent.cpp">
@@ -45,23 +51,29 @@
     <ClCompile Include="Mouse\MouseEvent.cpp">
       <Filter>Source Files\Mouse</Filter>
     </ClCompile>
-    <ClCompile Include="WindowContainer.cpp">
+    <ClCompile Include="Base\WindowContainer.cpp">
       <Filter>Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="Engine.cpp">
+    <ClCompile Include="Base\Engine.cpp">
       <Filter>Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="ErrorLogger.cpp">
+    <ClCompile Include="Base\ErrorLogger.cpp">
       <Filter>Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindow.cpp">
+    <ClCompile Include="Base\RenderWindow.cpp">
       <Filter>Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="Base\Source.cpp">
       <Filter>Source Files\Base</Filter>
     </ClCompile>
-    <ClCompile Include="StringConverter.cpp">
+    <ClCompile Include="Base\StringConverter.cpp">
       <Filter>Source Files\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Graphics.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\AdapterReader.cpp">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,20 +89,26 @@
     <ClInclude Include="Mouse\MouseEvent.h">
       <Filter>Header Files\Mouse</Filter>
     </ClInclude>
-    <ClInclude Include="Engine.h">
+    <ClInclude Include="Base\Engine.h">
       <Filter>Header Files\Base</Filter>
     </ClInclude>
-    <ClInclude Include="ErrorLogger.h">
+    <ClInclude Include="Base\ErrorLogger.h">
       <Filter>Header Files\Base</Filter>
     </ClInclude>
-    <ClInclude Include="RenderWindow.h">
+    <ClInclude Include="Base\RenderWindow.h">
       <Filter>Header Files\Base</Filter>
     </ClInclude>
-    <ClInclude Include="StringConverter.h">
+    <ClInclude Include="Base\StringConverter.h">
       <Filter>Header Files\Base</Filter>
     </ClInclude>
-    <ClInclude Include="WindowContainer.h">
+    <ClInclude Include="Base\WindowContainer.h">
       <Filter>Header Files\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Graphics.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\AdapterReader.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

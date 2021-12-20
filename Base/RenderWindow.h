@@ -12,6 +12,7 @@ public:
 	// If this returns false, the window will be closed.
 	// If this returns true, keep going through the ProcessMessage loop
 	bool ProcessMessages();
+	HWND getHWND();
 	~RenderWindow();
 private:
 	void RegisterWindowClass();
