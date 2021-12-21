@@ -9,4 +9,5 @@ public:
 	2) Taking in a data type used when checking if Windows/DirectX function calls were successful (and a string message) */
 	static void Log(std::string message);
 	static void Log(HRESULT hr, std::string message);
+	static void Log(HRESULT hr, std::wstring message);
 };

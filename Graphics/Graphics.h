@@ -1,5 +1,6 @@
 #pragma once
 #include "AdapterReader.h"
+#include "Shaders.h"
 
 class Graphics
 {
@@ -19,6 +20,6 @@ private:
 									and Frame 3 is sent to rear buffer to be drawn. */
 	Microsoft::WRL::ComPtr <ID3D11RenderTargetView> renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-	Microsoft::WRL::ComPtr<ID3D10Blob> vertex_shader_buffer;
+	VertexShader vertexshader;
 };
 

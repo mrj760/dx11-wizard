@@ -19,3 +19,14 @@ void ErrorLogger::Log(HRESULT hr, std::string message)
 	// Produce an error window using MessageBoxW (W: uses Wide-String)
 	MessageBoxW(NULL, error_message.c_str(), L"Error", MB_ICONERROR);	// (Parent window, message text, title, message box type)
 }
+
+void ErrorLogger::Log(HRESULT hr, std::wstring message)
+{
+	//gets error information from the HRESULT about the API function that was called
+	_com_error error(hr);
+
+	// Wide-strings require an L before them		// error.ErrorMessage() used to obtain the error information form the HRESULT
+	std::wstring error_message = L"Error: " + message + L"\n" + error.ErrorMessage();
+	// Produce an error window using MessageBoxW (W: uses Wide-String)
+	MessageBoxW(NULL, error_message.c_str(), L"Error", MB_ICONERROR);	// (Parent window, message text, title, message box type)
+}
