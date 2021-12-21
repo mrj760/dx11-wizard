@@ -20,6 +20,26 @@ void Graphics::renderFrame()
 	// clear the render target
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
 
+	// necessary before drawing...
+	this->deviceContext-> // set input layout
+		IASetInputLayout(this->vertexshader.getInputLayout());
+	this->deviceContext-> // set topology
+		IASetPrimitiveTopology(
+			D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	this->deviceContext-> // set vertex shader
+		VSSetShader(vertexshader.getShader(), NULL, 0);
+	this->deviceContext-> // set pixel shader
+		PSSetShader(pixelshader.getShader(), NULL, 0);
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	this->deviceContext->IASetVertexBuffers(0, 1 /* for now: only one buffer*/, vertexBuffer.GetAddressOf(), &stride, &offset);
+
+
+	// draw
+	this->deviceContext->Draw(3 /* # of vertices to draw */, 0 /* vertex offset */);
+
 	// present it
 	this->swapChain->Present(1 /*Vsync on (1 sync interval)*/, NULL/*Null flags*/);
 }
@@ -72,6 +92,12 @@ bool Graphics::initializeShaders()
 	
 	// init pixel shader
 	if (!pixelshader.initialize(this->device, shaderFolder + L"pixelshader.cso"))
+	{
+		return false;
+	}
+
+	// init the scene
+	if (!initializeScene())
 	{
 		return false;
 	}
@@ -183,6 +209,39 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 
 	// set the viewport
 	this->deviceContext->RSSetViewports(1/*1 viewport*/, &viewport);
+
+	return true;
+}
+
+bool Graphics::initializeScene()
+{	
+	// Vertices must be listed in clockwise order
+	Vertex v[] =
+	{
+		Vertex(-.1f, 0.f),
+		Vertex(0.f, 0.1f),
+		Vertex(0.1f, 0.f),
+	};
+
+	// Create description for vertex buffer
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(v);
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA vertexBufferData;
+	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
+	vertexBufferData.pSysMem = v;
+
+	HRESULT hr = this->device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, this->vertexBuffer.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create vertex buffer");
+		return false;
+	}
 
 	return true;
 }
