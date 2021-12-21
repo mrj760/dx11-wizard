@@ -47,12 +47,6 @@ bool Graphics::initializeShaders()
 		#endif
 	}
 
-	if (!vertexshader.initialize(this->device, shaderFolder + L"vertexshader.cso"))
-	{
-		return false;
-	}
-
-
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{"POSITION",
@@ -68,22 +62,10 @@ bool Graphics::initializeShaders()
 		}
 	};
 
-
 	UINT numElements = ARRAYSIZE(layout);
 
-
-
-	// Create input layout with above information
-	HRESULT hr = this->device->CreateInputLayout(
-		layout,	// Input layout
-		numElements, // number of elements in the input layout
-		this->vertexshader.getBuffer()->GetBufferPointer(), // Shader byte code width input signature (?)
-		this->vertexshader.getBuffer()->GetBufferSize(), // Byte code length
-		this->inputLayout.GetAddressOf() // pointer to address of input layout
-		);
-	if (FAILED(hr))
+	if (!vertexshader.initialize(this->device, shaderFolder + L"vertexshader.cso", layout, numElements))
 	{
-		ErrorLogger::Log("Failed to create input layout");
 		return false;
 	}
 

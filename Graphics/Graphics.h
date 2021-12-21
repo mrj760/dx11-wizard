@@ -19,7 +19,6 @@ private:
 									When Frame 2 is ready, Frame 1 is discarded, Frame 2 is sent to front buffer to be displayed, 
 									and Frame 3 is sent to rear buffer to be drawn. */
 	Microsoft::WRL::ComPtr <ID3D11RenderTargetView> renderTargetView;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 	VertexShader vertexshader;
 };
 
