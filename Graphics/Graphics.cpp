@@ -64,7 +64,14 @@ bool Graphics::initializeShaders()
 
 	UINT numElements = ARRAYSIZE(layout);
 
+	// Init vertex shader
 	if (!vertexshader.initialize(this->device, shaderFolder + L"vertexshader.cso", layout, numElements))
+	{
+		return false;
+	}
+	
+	// init pixel shader
+	if (!pixelshader.initialize(this->device, shaderFolder + L"pixelshader.cso"))
 	{
 		return false;
 	}
@@ -164,6 +171,18 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	// set render target
 	// Pass # of render targets, pointer to render target views, and pointer to depth stencil view
 	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), NULL);
+
+	// Create the viewport
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = width;
+	viewport.Height = height;
+
+	// set the viewport
+	this->deviceContext->RSSetViewports(1/*1 viewport*/, &viewport);
 
 	return true;
 }

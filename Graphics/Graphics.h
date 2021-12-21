@@ -20,5 +20,6 @@ private:
 									and Frame 3 is sent to rear buffer to be drawn. */
 	Microsoft::WRL::ComPtr <ID3D11RenderTargetView> renderTargetView;
 	VertexShader vertexshader;
+	PixelShader pixelshader;
 };
 

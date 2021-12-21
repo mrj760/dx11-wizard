@@ -39,7 +39,6 @@ int APIENTRY wWinMain(
 
 // INPUT ASSEMBLER: Must setup - DONE
 // VERTEX SHADER:	Must program - DONE
-
-// RASTERIZER:		Must setup
-// PIXEL SHADER:	Must program
-// OUTPUT MERGER:	Must setup
+// RASTERIZER:		Must setup	- DONE
+// PIXEL SHADER:	Must program - DONE
+// OUTPUT MERGER:	Must setup - DONE
