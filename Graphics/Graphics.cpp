@@ -60,8 +60,8 @@ void Graphics::renderFrame()
 	this->deviceContext->IASetVertexBuffers(
 		0,								// start slot
 		1,								// for now: only one buffer 
-		vertexBuffer.GetAddressOf(),	// vertex buffer to use
-		&stride,						// how big of a data size to iterate over
+		vertexBuffer.getAddressOf(),	// vertex buffer to use
+		vertexBuffer.stridePtr(),						// how big of a data size to iterate over
 		&offset);						// at which slot to begin when reading in the vertex buffer data
 	this->deviceContext->IASetIndexBuffer(
 		indecesBuffer.Get(), // indeces buffer to use
@@ -404,23 +404,10 @@ bool Graphics::initializeScene()
 
 	/* VERTEX BUFFER */
 
-	// Create description for vertex buffer
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(v);
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-
-	// Create subresource data for vertex buffer
-	D3D11_SUBRESOURCE_DATA vertexBufferData;
-	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
-	vertexBufferData.pSysMem = v;
+	
 
 	// Create vertex buffer
-	HRESULT hr = this->device->CreateBuffer(
-		&vertexBufferDesc, &vertexBufferData, this->vertexBuffer.GetAddressOf());
+	HRESULT hr = this->vertexBuffer.initialize(this->device.Get(), v, ARRAYSIZE(v));
 
 	if (FAILED(hr))
 	{

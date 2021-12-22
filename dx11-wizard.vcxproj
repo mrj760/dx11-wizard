@@ -176,6 +176,7 @@
     <ClInclude Include="Base\WindowContainer.h" />
     <ClInclude Include="Graphics\Vertex.h" />
     <ClInclude Include="Graphics\Shaders.h" />
+    <ClInclude Include="Graphics\VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

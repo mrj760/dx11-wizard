@@ -5,12 +5,14 @@
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
 #include <WICTextureLoader.h>
+#include "VertexBuffer.h"
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;
 
 class Graphics
 {
+
 public:
 	bool initialize(HWND hwnd, int width, int height); // returns whether initialization of DirectX was successful
 	void renderFrame();
@@ -38,7 +40,7 @@ private:
 	PixelShader pixelshader;
 
 	// vertex buffer(s)
-	mwrl::ComPtr <ID3D11Buffer> vertexBuffer;
+	VertexBuffer<Vertex> vertexBuffer;
 
 	// indeces buffer for vertex data
 	mwrl::ComPtr<ID3D11Buffer> indecesBuffer;
