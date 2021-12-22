@@ -6,6 +6,7 @@
 #include <SpriteFont.h>
 #include <WICTextureLoader.h>
 #include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -43,7 +44,8 @@ private:
 	VertexBuffer<Vertex> vertexBuffer;
 
 	// indeces buffer for vertex data
-	mwrl::ComPtr<ID3D11Buffer> indecesBuffer;
+	//mwrl::ComPtr<ID3D11Buffer> indecesBuffer;
+	IndexBuffer indicesBuffer;
 
 	// depth stencil
 	mwrl::ComPtr<ID3D11DepthStencilView> depthStencilView;

@@ -56,22 +56,21 @@ void Graphics::renderFrame()
 	UINT offset = 0;				// at which slot to begin when reading in the vertex buffer data
 
 	// Set Buffers
-	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf());
-	this->deviceContext->IASetVertexBuffers(
+	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
+	this->deviceContext->IASetVertexBuffers( // vertices for our context
 		0,								// start slot
 		1,								// for now: only one buffer 
 		vertexBuffer.getAddressOf(),	// vertex buffer to use
 		vertexBuffer.stridePtr(),						// how big of a data size to iterate over
 		&offset);						// at which slot to begin when reading in the vertex buffer data
-	this->deviceContext->IASetIndexBuffer(
-		indecesBuffer.Get(), // indeces buffer to use
+	this->deviceContext->IASetIndexBuffer( // indices for our context
+		indicesBuffer.get(), // indeces buffer to use
 		DXGI_FORMAT_R32_UINT, // reading 32 bit uints
 		0); // no offset
 	
-	// Draw data from buffers
 	this->deviceContext->DrawIndexed(
-		6,	// # of vertices to draw
-		0,  // initial vertex index
+		indicesBuffer.getBufferSize(), // # of vertices to draw
+		0, // initial vertex index
 		0); // base vertex index
 
 	// Draw Text
@@ -404,8 +403,6 @@ bool Graphics::initializeScene()
 
 	/* VERTEX BUFFER */
 
-	
-
 	// Create vertex buffer
 	HRESULT hr = this->vertexBuffer.initialize(this->device.Get(), v, ARRAYSIZE(v));
 
@@ -418,26 +415,14 @@ bool Graphics::initializeScene()
 	/* INDECES BUFFER (of vertices) */
 
 	// Create Indeces Array
-	DWORD indeces[]
+	DWORD indices[]
 	{
 		0,1,2,
 		0,2,3,
 	};// using indeces fixes reusing multiple instances of the same vertex data when drawing pixels
 	
 	// Create description for indeces buffer
-	D3D11_BUFFER_DESC indecesBufferDesc;
-	ZeroMemory(&indecesBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	indecesBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indecesBufferDesc.ByteWidth = sizeof(DWORD) * ARRAYSIZE(indeces);
-	indecesBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indecesBufferDesc.CPUAccessFlags = 0;
-	indecesBufferDesc.MiscFlags = 0;
-
-	// Create indeces Subresource Data
-	D3D11_SUBRESOURCE_DATA indecesBufferData;
-	indecesBufferData.pSysMem = indeces;
-	hr = this->device->CreateBuffer(
-		&indecesBufferDesc, &indecesBufferData, this->indecesBuffer.GetAddressOf());
+	hr = indicesBuffer.initialize(device.Get(), indices, ARRAYSIZE(indices));
 
 	if (FAILED(hr))
 	{
