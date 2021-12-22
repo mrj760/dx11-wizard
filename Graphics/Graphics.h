@@ -2,8 +2,11 @@
 #include "AdapterReader.h"
 #include "Shaders.h"
 #include "Vertex.h"
+#include <SpriteBatch.h>
+#include <SpriteFont.h>
 
 namespace mwrl = Microsoft::WRL;
+namespace dx = DirectX;
 
 class Graphics
 {
@@ -44,5 +47,9 @@ private:
 
 	// rasterizer state
 	mwrl::ComPtr<ID3D11RasterizerState> rasterizerState;
+
+	// Font stuff
+	std::unique_ptr<dx::SpriteBatch> spriteBatch;
+	std::unique_ptr<dx::SpriteFont> spriteFont;
 };
 

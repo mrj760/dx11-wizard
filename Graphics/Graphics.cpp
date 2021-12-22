@@ -60,6 +60,11 @@ void Graphics::renderFrame()
 	this->deviceContext->IASetVertexBuffers(0, 1 /* for now: only one buffer*/, vertexBuffer.GetAddressOf(), &stride, &offset);
 	this->deviceContext->Draw(3 /* # of vertices to draw */, 0 /* vertex offset */);
 
+	// Draw Text
+	spriteBatch->Begin();
+	spriteFont->DrawString(spriteBatch.get(), L"Hello World", dx::XMFLOAT2(0, 0), dx::Colors::Bisque, 0, dx::XMFLOAT2(0, 0), dx::XMFLOAT2(1,1));
+	spriteBatch->End();
+
 
 	// present our frame
 	this->swapChain->Present(1 /*Vsync on (1 sync interval)*/, NULL/*Null flags*/);
@@ -142,10 +147,11 @@ bool Graphics::initializeShaders()
 
 bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 {
-	// need pointer to video adapter when creating a device. We don't want the default adapter, since that's not always the one we want.
+	// initialize adapters
+	/* Need pointer to video adapter when creating a device. 
+		We don't want the default adapter, since that's not always the one we want. */
 	std::vector<AdapterData> adapters = AdapterReader::getAdapters(); // Assume adapter with highest memory best (Hopefully that means the GPU)
-
-	// less than one usable adapter
+	// fatal if less than one video adapter
 	if (adapters.size() < 1)
 	{
 		ErrorLogger::Log("No DXGI Adapters found.");
@@ -159,8 +165,8 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	scd.BufferDesc.Height = height;
 	scd.BufferDesc.RefreshRate.Numerator = 60;	// if vsync turned off (or on but in windowed mode), refresh rate does nothing
 	scd.BufferDesc.RefreshRate.Denominator = 1;
-	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; /* 
-														A four-component, 32-bit unsigned-normalized-integer format that supports 
+	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; /*
+														A four-component, 32-bit unsigned-normalized-integer format that supports
 														8 bits per channel including alpha.
 														"(8 bits for R, G, B, and a)" */
 	scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
@@ -183,16 +189,16 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 
 			Direct3D 12: This enumeration value is never supported.
 			D3D12 apps must using DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL or DXGI_SWAP_EFFECT_FLIP_DISCARD.*/
-	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH; 
-		// DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH Explanation :
-			/* Set this flag to enable an application to switch modes by calling
-			IDXGISwapChain::ResizeTarget.
-			When switching from windowed to full-screen mode, 
-			the display mode (or monitor resolution) will be changed to match 
-			the dimensions of the application window.*/
+	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	// DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH Explanation :
+		/* Set this flag to enable an application to switch modes by calling
+		IDXGISwapChain::ResizeTarget.
+		When switching from windowed to full-screen mode,
+		the display mode (or monitor resolution) will be changed to match
+		the dimensions of the application window.*/
 
 
-	// Create device and swapchain
+		// Create device and swapchain
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(
 		adapters[0].pAdapter, // First IDXGI Adapter
 		D3D_DRIVER_TYPE_UNKNOWN, // Tell DirectX to be ready for anything (unspecified)
@@ -206,14 +212,15 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 		this->device.GetAddressOf(), // address to device
 		NULL, // no supported feature level
 		this->deviceContext.GetAddressOf() // pointer to our device's context
-		);
+	);
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log("Failed to create d3d11 device and swapchain");
+		return false;
 	}
 
 	// pointer to back buffer (get from swap chain)
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+	mwrl::ComPtr<ID3D11Texture2D> backBuffer;
 	// pass buffer slot, id of 2 texture, and address of where to store back buffer
 	hr = this->swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
 	if (FAILED(hr))
@@ -306,6 +313,9 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 		return false;
 	}
 
+	// Init fonts
+	spriteBatch = std::make_unique<dx::SpriteBatch>(this->deviceContext.Get());
+	spriteFont = std::make_unique<dx::SpriteFont>(this->device.Get(), L"Data/Fonts/lucida_console_16.spritefont");
 
 	return true;
 }
