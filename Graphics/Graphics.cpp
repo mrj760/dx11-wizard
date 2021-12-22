@@ -62,7 +62,7 @@ void Graphics::renderFrame()
 
 	// Draw Text
 	spriteBatch->Begin();
-	spriteFont->DrawString(spriteBatch.get(), L"Hello World", dx::XMFLOAT2(0, 0), dx::Colors::Bisque, 0, dx::XMFLOAT2(0, 0), dx::XMFLOAT2(1,1));
+	spriteFont->DrawString(spriteBatch.get(), L"Hello World", dx::XMFLOAT2(0, 5), dx::Colors::Bisque, 0, dx::XMFLOAT2(0, 0), dx::XMFLOAT2(1,1));
 	spriteBatch->End();
 
 

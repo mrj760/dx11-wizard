@@ -12,16 +12,28 @@ bool RenderWindow::Initialize(WindowContainer* pWindowContainer, HINSTANCE hInst
 
 	this->RegisterWindowClass();
 
+	// center of screen
+	int centerScreenX = GetSystemMetrics(SM_CXSCREEN) / 2 - width / 2;
+	int centerScreenY = GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2;
+
+	RECT wr; // window rectangle
+	wr.left = centerScreenX;
+	wr.top = centerScreenY;
+	wr.right = wr.left + width;
+	wr.bottom = wr.top + height;
+
+	AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, false);
+
 	// Class is registered. Ready to Create our window.
 	this->handle = CreateWindowEx(	// Extended window class. 
 		0, // Default Extended Windows Style. See : https://msdn.microsoft.com/en-us/library/windows/desktop/ff700543(v=vs.85).aspx
 		this->window_class_wide.c_str(),	// window class name
 		this->window_title_wide.c_str(),	// window title name
 		WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,	// Normal Windows style. See : https://msdn.microsoft.com/en-us/library/windows/desktop/ms632600(v=vs.85).aspx
-		0,	// window X Position
-		0,	// window Y Position
-		this->width,
-		this->height,
+		wr.left,	// window X Position
+		wr.top,	// window Y Position
+		wr.right - wr.left, // width
+		wr.bottom - wr.top, // height
 		NULL,	// Handle to parent window. This is first window so no parent.
 		NULL,	// Handle to menu or child window id. Can be set to NULL and use menu in WindowClassEx
 		this->hInstance,	// Handle to the instance of module to be used with this window
