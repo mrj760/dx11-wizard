@@ -4,6 +4,7 @@
 #include "Vertex.h"
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
+#include <WICTextureLoader.h>
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -38,7 +39,6 @@ private:
 
 	// vertex buffer(s)
 	mwrl::ComPtr <ID3D11Buffer> vertexBuffer;
-	mwrl::ComPtr <ID3D11Buffer> vertexBuffer2;
 
 	// depth stencil
 	mwrl::ComPtr<ID3D11DepthStencilView> depthStencilView;
@@ -51,5 +51,11 @@ private:
 	// Font stuff
 	std::unique_ptr<dx::SpriteBatch> spriteBatch;
 	std::unique_ptr<dx::SpriteFont> spriteFont;
+
+	// Sampler state
+	mwrl::ComPtr<ID3D11SamplerState> samplerState;
+
+	// shader resource (texture)
+	mwrl::ComPtr<ID3D11ShaderResourceView> myTexture;
 };
 

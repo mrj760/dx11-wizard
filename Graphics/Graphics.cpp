@@ -1,5 +1,5 @@
 #include "Graphics.h"
-#include <string>
+
 
 bool Graphics::initialize(HWND hwnd, int width, int height)
 {
@@ -34,7 +34,7 @@ void Graphics::renderFrame()
 	// set topology
 	this->deviceContext-> 
 		IASetPrimitiveTopology(
-			D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+			D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	// set rasterizer state
 	this->deviceContext->
@@ -42,6 +42,9 @@ void Graphics::renderFrame()
 
 	// set depth stencil state
 	this->deviceContext->OMSetDepthStencilState(depthStencilState.Get(), 0);
+
+	// Set sampler state
+	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 
 	// Set shaders
 	this->deviceContext-> // set vertex shader
@@ -52,13 +55,10 @@ void Graphics::renderFrame()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	// Small Triangle
-	this->deviceContext->IASetVertexBuffers(0, 1 /* for now: only one buffer*/, vertexBuffer2.GetAddressOf(), &stride, &offset);
-	this->deviceContext->Draw(3 /* # of vertices to draw */, 0 /* vertex offset */);
-
-	// Big triangle
+	// Triangle
+	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf());
 	this->deviceContext->IASetVertexBuffers(0, 1 /* for now: only one buffer*/, vertexBuffer.GetAddressOf(), &stride, &offset);
-	this->deviceContext->Draw(3 /* # of vertices to draw */, 0 /* vertex offset */);
+	this->deviceContext->Draw(6 /* # of vertices to draw */, 0 /* vertex offset */);
 
 	// Draw Text
 	spriteBatch->Begin();
@@ -112,9 +112,9 @@ bool Graphics::initializeShaders()
 
 		// Pixel Color
 		{
-			"COLOR",
+			"TEXCOORD",
 			0, /* Semantics */
-			DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT, /* Using 3 floats for color (rgb) */
+			DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, /* Using 2 floats */
 			0, /* Input slot */
 			D3D11_APPEND_ALIGNED_ELEMENT, /* Macro for offset (?) */
 			D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, /* Input slot class */
@@ -317,17 +317,38 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	spriteBatch = std::make_unique<dx::SpriteBatch>(this->deviceContext.Get());
 	spriteFont = std::make_unique<dx::SpriteFont>(this->device.Get(), L"Data/Fonts/lucida_console_16.spritefont");
 
+	// init sampler state
+	D3D11_SAMPLER_DESC sampDesc;
+	ZeroMemory(&sampDesc, sizeof(sampDesc));
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create sampler state.");
+		return false;
+	}
+
 	return true;
 }
 
 bool Graphics::initializeScene()
 {	
-	// Big triangle
+	// Textured Square
 	Vertex v[] =
 	{
-		Vertex(-0.5f,	-0.5f,	1.0f,	1.0f, 0.0f, 0.0f), // red bottom left
-		Vertex(0.0f,	0.5f,	1.0f,	0.0f, 1.0f, 0.0f), // blue top center
-		Vertex(0.5f,	-0.5f,	1.0f,	0.0f, 0.0f, 1.0f), // green bottom right
+		Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
+		Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left
+		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+
+		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+		Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right
+		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
 	};
 
 	// Create description for vertex buffer
@@ -339,10 +360,12 @@ bool Graphics::initializeScene()
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
 
+	// subresource data for vertex buffer
 	D3D11_SUBRESOURCE_DATA vertexBufferData;
 	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
 	vertexBufferData.pSysMem = v;
 
+	// create the buffer
 	HRESULT hr = this->device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, this->vertexBuffer.GetAddressOf());
 	if (FAILED(hr))
 	{
@@ -350,29 +373,10 @@ bool Graphics::initializeScene()
 		return false;
 	}
 
-	// Little Triangle
-	Vertex v2[] =
-	{
-		Vertex(-0.2f,	-0.2f,	0.0f,	0.0f, 1.f, 0.f), // blue bottom left
-		Vertex(0.0f,	0.2f,	0.0f,	0.f, 0.f, 1.f), // green top center
-		Vertex(0.2f,	-0.2f,	0.0f,	1.0f, 0.f, 0.f), // red bottom right
-	};
-
-	// Create description for vertex buffer
-	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(v2);
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-
-	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
-	vertexBufferData.pSysMem = v2;
-
-	hr = this->device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, this->vertexBuffer2.GetAddressOf());
+	hr = dx::CreateWICTextureFromFile(this->device.Get(), L"Data/Textures/boi.png", nullptr, myTexture.GetAddressOf());
 	if (FAILED(hr))
 	{
-		ErrorLogger::Log(hr, "Failed to create vertex buffer");
+		ErrorLogger::Log(hr, "Failed to create wic texture from file");
 		return false;
 	}
 

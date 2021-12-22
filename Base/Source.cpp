@@ -22,6 +22,12 @@ int APIENTRY wWinMain(
 	//}
 
 	// Create and initialize window
+	HRESULT hr = CoInitialize(NULL);
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "CoInitialize failed.");
+		exit(-1);
+	}
 	Engine engine;
 	if (engine.Initialize(hInstance, "Title", "MyWindowClass", 800, 600));
 	{

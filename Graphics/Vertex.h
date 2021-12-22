@@ -6,9 +6,9 @@ namespace dx = DirectX;
 struct Vertex
 {
 	Vertex();
-	Vertex(float x, float y, float z, float r, float g, float b) : 
-		pos(x, y, z), color(r,g,b) {}
+	Vertex(float x, float y, float z, float u, float v) : 
+		pos(x, y, z), texCoord(u, v) {}
 	dx::XMFLOAT3 pos;
-	dx::XMFLOAT3 color;
+	dx::XMFLOAT2 texCoord;
 };
 
