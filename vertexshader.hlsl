@@ -1,4 +1,10 @@
 // Vertex Shader Input
+cbuffer constbuffer : register(b0) // use first buffer slot
+{
+    float xOffset;
+    float yOffset;
+};
+
 struct VS_INPUT
 {
     // parameters with matching semantic names
@@ -17,6 +23,9 @@ struct VS_OUTPUT
 VS_OUTPUT main(VS_INPUT input)
 {
     VS_OUTPUT output;
+
+    input.inPos.x += xOffset;
+    input.inPos.y += yOffset;
 
     output.outPos = float4(input.inPos, 1.0f);
 

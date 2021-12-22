@@ -7,6 +7,7 @@
 #include <WICTextureLoader.h>
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ConstantBufferTypes.h"
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -39,6 +40,8 @@ private:
 	// shaders
 	VertexShader vertexshader;
 	PixelShader pixelshader;
+
+	mwrl::ComPtr<ID3D11Buffer> constbuffer;
 
 	// vertex buffer(s)
 	VertexBuffer<Vertex> vertexBuffer;

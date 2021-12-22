@@ -55,6 +55,27 @@ void Graphics::renderFrame()
 	UINT stride = sizeof(Vertex);	// how big of a data size to iterate over
 	UINT offset = 0;				// at which slot to begin when reading in the vertex buffer data
 
+	// Update Constant Buffer
+	CB_VS_vertexshader data;// vv
+	data.xOffset = 0.0f;	// vv
+	data.yOffset = 0.5f;	// ^^ Take this struct data and copy it into the mapped resource pData
+	D3D11_MAPPED_SUBRESOURCE mappedRes; // needed to access data for constant buffer
+	deviceContext->Map( //
+		constbuffer.Get(), // pointer to constant buffer
+		0, 
+		D3D11_MAP_WRITE_DISCARD, 
+		0, 
+		&mappedRes);
+	CopyMemory(
+		mappedRes.pData, // where to copy to
+		&data, // copy the struct data
+		sizeof(CB_VS_vertexshader)); // it's this size, Mr. Computer
+	deviceContext->Unmap(constbuffer.Get(), 0); // Allow GPU to access this data again
+	deviceContext->VSSetConstantBuffers(
+		0, // registered at slot 0
+		1, // updating one constant buffer
+		constbuffer.GetAddressOf());
+
 	// Set Buffers
 	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
 	this->deviceContext->IASetVertexBuffers( // vertices for our context
@@ -395,8 +416,6 @@ bool Graphics::initializeScene()
 		Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left - [0]
 		Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left - [1]
 		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right - [2]
-
-		//Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right	// --repeat
 		Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right - [3]
 		//Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  // --repeat
 	};
@@ -426,7 +445,7 @@ bool Graphics::initializeScene()
 
 	if (FAILED(hr))
 	{
-		ErrorLogger::Log(hr, "Failed to create indeces buffer.");
+		ErrorLogger::Log(hr, "Failed to create indices buffer.");
 		return false;
 	}
 
@@ -439,6 +458,23 @@ bool Graphics::initializeScene()
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create wic texture from file");
+		return false;
+	}
+
+	/* CONSTANT BUFFER(S) */
+	D3D11_BUFFER_DESC constbufferDesc;
+	constbufferDesc.Usage = D3D11_USAGE_DYNAMIC; // dynamic usage, can be changed
+	constbufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; // constant buffer
+	constbufferDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE; // need CPU to write to this buffer
+	constbufferDesc.MiscFlags = 0;	
+	constbufferDesc.ByteWidth = static_cast<UINT>(
+		sizeof(CB_VS_vertexshader) + (16 - sizeof(CB_VS_vertexshader))); // must be "16 byte aligned" so align to be 16 bytes
+	constbufferDesc.StructureByteStride = 0;
+
+	hr = device->CreateBuffer(&constbufferDesc, 0, constbuffer.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to init constant buffer");
 		return false;
 	}
 
