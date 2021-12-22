@@ -15,7 +15,7 @@ bool Graphics::initialize(HWND hwnd, int width, int height)
 void Graphics::renderFrame()
 {
 	// Determine what background color will be
-	float bgcolor[] = { 0,0,1.0f,1.0f }; // (RGBa: 0,0,1,1) : Blue
+	float bgcolor[] = { 0.1f, 0.1f, 0.1f, 1.0f }; // Grey background
 	
 	// clear the render target
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
@@ -49,6 +49,8 @@ bool Graphics::initializeShaders()
 
 	std::wstring shaderFolder = L"";
 	#pragma region DetermineShaderPath
+
+	// Account for different environments
 	if (IsDebuggerPresent())
 	{
 		#ifdef _DEBUG // Debug mode
@@ -67,18 +69,32 @@ bool Graphics::initializeShaders()
 		#endif
 	}
 
+	/* We are inputting these things to directx */
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
-		{"POSITION",
-		0 /* specify 0 in case 2 semantics have the same name
-			(useful in instancing when passing matrices to input layout) */,
-		DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, /* Format of the data (2 32-bit floats)
-									(if we were using 3 32-bit floats we add B32 after G32)
-									likewise, can add A32 after B32 */
-		0, /* Input Slot */
-		0, /* Offset */ // Can also use Macro Magic instead of 0: D3D11_APPEND_ALIGNED_ELEMENT
-		D3D11_INPUT_PER_VERTEX_DATA, /* Input Slot Class (Either vertex data or instance data) */
-		0 /* Instance data step rate: # of instances to draw using same per-instance data before advancing in the buffer by one element */
+		// Pixel position
+		{
+			"POSITION",
+			0 /* specify 0 in case 2 semantics have the same name
+				(useful in instancing when passing matrices to input layout) */,
+			DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, /* Format of the data (2 32-bit floats)
+										(if we were using 3 32-bit floats we add B32 after G32)
+										likewise, can add A32 after B32 */
+			0, /* Input Slot */
+			0, /* Offset */ // Can also use Macro Magic instead of 0: D3D11_APPEND_ALIGNED_ELEMENT
+			D3D11_INPUT_PER_VERTEX_DATA, /* Input Slot Class (Either vertex data or instance data) */
+			0 /* Instance data step rate: # of instances to draw using same per-instance data before advancing in the buffer by one element */
+		},
+
+		// Pixel Color
+		{
+			"COLOR",
+			0, /* Semantics */
+			DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT, /* Using 3 floats for color (rgb) */
+			0, /* Input slot */
+			D3D11_APPEND_ALIGNED_ELEMENT, /* Macro for offset (?) */
+			D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, /* Input slot class */
+			0 /* Instance data step rate */
 		}
 	};
 
@@ -218,9 +234,9 @@ bool Graphics::initializeScene()
 	// Vertices must be listed in clockwise order
 	Vertex v[] =
 	{
-		Vertex(-.1f, 0.f),
-		Vertex(0.f, 0.1f),
-		Vertex(0.1f, 0.f),
+		Vertex(-.5f, -0.5f, 1.0f, 0.f, 0.f), // red bottom left
+		Vertex(0.f, 0.5f, 0.f, 1.f, 0.f), // blue top center
+		Vertex(0.5f, -0.5f, 0.f, 0.f, 1.f), // green bottom right
 	};
 
 	// Create description for vertex buffer
