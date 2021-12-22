@@ -36,15 +36,3 @@ int APIENTRY wWinMain(
 	
 	return 0;
 }
-
-
-// TODO
-
-// INPUT ASSEMBLER: Must setup - DONE
-// VERTEX SHADER:	Must program - DONE
-// RASTERIZER:		Must setup	- DONE
-// PIXEL SHADER:	Must program - DONE
-// OUTPUT MERGER:	Must setup - DONE
-
-// Create Vertex Buffer
-// Draw
