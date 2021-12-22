@@ -23,9 +23,9 @@ void Graphics::renderFrame()
 		bgcolor);
 	this->deviceContext->ClearDepthStencilView(
 		this->depthStencilView.Get(), 
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, /* Clear both depth and stencil */
-		1.0f, /* set depth to 1 */
-		0); /* initialize stencil to 0 */
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, // Clear both depth and stencil
+		1.0f, // set depth to 1
+		0); // initialize stencil to 0
 
 	// set input layout
 	this->deviceContext-> 
@@ -52,27 +52,49 @@ void Graphics::renderFrame()
 	this->deviceContext-> // set pixel shader
 		PSSetShader(pixelshader.getShader(), NULL, 0);
 
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
+	UINT stride = sizeof(Vertex);	// how big of a data size to iterate over
+	UINT offset = 0;				// at which slot to begin when reading in the vertex buffer data
 
-	// Triangle
+	// Set Buffers
 	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf());
-	this->deviceContext->IASetVertexBuffers(0, 1 /* for now: only one buffer*/, vertexBuffer.GetAddressOf(), &stride, &offset);
-	this->deviceContext->Draw(6 /* # of vertices to draw */, 0 /* vertex offset */);
+	this->deviceContext->IASetVertexBuffers(
+		0,								// start slot
+		1,								// for now: only one buffer 
+		vertexBuffer.GetAddressOf(),	// vertex buffer to use
+		&stride,						// how big of a data size to iterate over
+		&offset);						// at which slot to begin when reading in the vertex buffer data
+	this->deviceContext->IASetIndexBuffer(
+		indecesBuffer.Get(), // indeces buffer to use
+		DXGI_FORMAT_R32_UINT, // reading 32 bit uints
+		0); // no offset
+	
+	// Draw data from buffers
+	this->deviceContext->DrawIndexed(
+		6,	// # of vertices to draw
+		0,  // initial vertex index
+		0); // base vertex index
 
 	// Draw Text
 	spriteBatch->Begin();
-	spriteFont->DrawString(spriteBatch.get(), L"Hello World", dx::XMFLOAT2(0, 5), dx::Colors::Bisque, 0, dx::XMFLOAT2(0, 0), dx::XMFLOAT2(1,1));
+	spriteFont->DrawString(
+		spriteBatch.get(), 
+		L"Hello World", 
+		dx::XMFLOAT2(0, 5), // position
+		dx::Colors::Bisque, // color
+		0,					// rotation
+		dx::XMFLOAT2(0, 0), // origin
+		dx::XMFLOAT2(1,1)	// scale
+		);					// default effects and layer depth parameters
 	spriteBatch->End();
 
-
 	// present our frame
-	this->swapChain->Present(1 /*Vsync on (1 sync interval)*/, NULL/*Null flags*/);
+	this->swapChain->Present(
+		1,		// Vsync-on (1 sync interval) 
+		NULL);	//Null flags
 }
 
 bool Graphics::initializeShaders()
 {
-
 	std::wstring shaderFolder = L"";
 	#pragma region DetermineShaderPath
 
@@ -95,7 +117,7 @@ bool Graphics::initializeShaders()
 		#endif
 	}
 
-	/* We are inputting these things to directx */
+	/* We are inputting these shader variables to our shaders*/
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		// Pixel position
@@ -147,6 +169,8 @@ bool Graphics::initializeShaders()
 
 bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 {
+	/* ADAPTERS */
+
 	// initialize adapters
 	/* Need pointer to video adapter when creating a device. 
 		We don't want the default adapter, since that's not always the one we want. */
@@ -157,6 +181,8 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 		ErrorLogger::Log("No DXGI Adapters found.");
 		return false;
 	}
+
+	/* SWAPCHAIN */
 
 	// Create description of swapchain
 	DXGI_SWAP_CHAIN_DESC scd; /* Contains width, height, refresh rate, format, scanline ordering, and scaling */
@@ -190,15 +216,14 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 			Direct3D 12: This enumeration value is never supported.
 			D3D12 apps must using DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL or DXGI_SWAP_EFFECT_FLIP_DISCARD.*/
 	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	// DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH Explanation :
+	// Explanation of DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH:
 		/* Set this flag to enable an application to switch modes by calling
 		IDXGISwapChain::ResizeTarget.
 		When switching from windowed to full-screen mode,
 		the display mode (or monitor resolution) will be changed to match
 		the dimensions of the application window.*/
-
-
-		// Create device and swapchain
+	
+	// Create device and swapchain
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(
 		adapters[0].pAdapter, // First IDXGI Adapter
 		D3D_DRIVER_TYPE_UNKNOWN, // Tell DirectX to be ready for anything (unspecified)
@@ -211,31 +236,38 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 		this->swapChain.GetAddressOf(), // address to swap chain
 		this->device.GetAddressOf(), // address to device
 		NULL, // no supported feature level
-		this->deviceContext.GetAddressOf() // pointer to our device's context
-	);
+		this->deviceContext.GetAddressOf()); // pointer to our device's context
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log("Failed to create d3d11 device and swapchain");
 		return false;
 	}
 
-	// pointer to back buffer (get from swap chain)
+	// populate a back buffer using the swap chain
 	mwrl::ComPtr<ID3D11Texture2D> backBuffer;
-	// pass buffer slot, id of 2 texture, and address of where to store back buffer
-	hr = this->swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
+	hr = this->swapChain->GetBuffer(
+		0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "GetBuffer Failed.");
 		return false;
 	}
 
+	/* RENDER TARGET VIEW */
+
 	// create render target view
-	hr = this->device->CreateRenderTargetView(backBuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
+	hr = this->device->CreateRenderTargetView(
+		backBuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create render target view.");
 		return false;
 	}
+
+	/* STENCIL */
 
 	// Create description of depth stencil buffer
 	D3D11_TEXTURE2D_DESC depthStencilTexDesc;
@@ -252,7 +284,10 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	depthStencilTexDesc.MiscFlags = 0;
 
 	// Create texture / Depth stencil buffer
-	hr = this->device->CreateTexture2D(&depthStencilTexDesc, NULL /* No initial sub resource data */, this->depthStencilBuffer.GetAddressOf() /* Where to store buffer */);
+	hr = this->device->CreateTexture2D(
+		&depthStencilTexDesc, NULL /* No initial sub resource data */, 
+		this->depthStencilBuffer.GetAddressOf() /* Where to store buffer */);
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create depth stencil buffer");
@@ -260,14 +295,16 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	}
 
 	// Create depth stencil view
-	hr = this->device->CreateDepthStencilView(this->depthStencilBuffer.Get(), NULL, this->depthStencilView.GetAddressOf());
+	hr = this->device->CreateDepthStencilView(
+		this->depthStencilBuffer.Get(), NULL, this->depthStencilView.GetAddressOf());
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create depth stencil view");
 		return false;
 	}
 
-	// set render target
+	// set stencil's render target
 	this->deviceContext->OMSetRenderTargets(
 		1, /* # of render targets */ 
 		this->renderTargetView.GetAddressOf(), /* pointer to render target views */ 
@@ -280,12 +317,16 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	depthStencilDesc.DepthEnable = true; // enable depth
 	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL; // turn on stencil
 	depthStencilDesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS_EQUAL; // how to decide whether to replace pixel based on z-depth
-	hr = this->device->CreateDepthStencilState(&depthStencilDesc, this->depthStencilState.GetAddressOf());
+	hr = this->device->CreateDepthStencilState(
+		&depthStencilDesc, this->depthStencilState.GetAddressOf());
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create depth stencil state");
 		return false;
 	}
+
+	/* VIEWPORT */
 
 	// Create the viewport
 	D3D11_VIEWPORT viewport;
@@ -300,22 +341,30 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	// set the viewport
 	this->deviceContext->RSSetViewports(1/*1 viewport*/, &viewport);
 
+	/* RASTERIZER */
+
 	// Create rasterizer state
 	D3D11_RASTERIZER_DESC rasterizerDesc;
 	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 	rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID; // solid fill (as opposed to wireframe)
 	rasterizerDesc.CullMode= D3D11_CULL_MODE::D3D11_CULL_BACK; // don't draw back-facing triangles 
 																// (clockwise pixels : front-facing, counter-clockwise : back-facing)
-	hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerState.GetAddressOf());
+	hr = this->device->CreateRasterizerState(
+		&rasterizerDesc, this->rasterizerState.GetAddressOf());
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create rasterizer state");
 		return false;
 	}
 
+	/* FONTS */
+
 	// Init fonts
 	spriteBatch = std::make_unique<dx::SpriteBatch>(this->deviceContext.Get());
 	spriteFont = std::make_unique<dx::SpriteFont>(this->device.Get(), L"Data/Fonts/lucida_console_16.spritefont");
+
+	/* SAMPLER */
 
 	// init sampler state
 	D3D11_SAMPLER_DESC sampDesc;
@@ -327,7 +376,9 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 	sampDesc.MinLOD = 0;
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+	hr = this->device->CreateSamplerState(
+		&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create sampler state.");
@@ -342,14 +393,16 @@ bool Graphics::initializeScene()
 	// Textured Square
 	Vertex v[] =
 	{
-		Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
-		Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left
-		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
+		Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left - [0]
+		Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left - [1]
+		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right - [2]
 
-		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right
-		Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right
-		Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left 
+		//Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right	// --repeat
+		Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right - [3]
+		//Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  // --repeat
 	};
+
+	/* VERTEX BUFFER */
 
 	// Create description for vertex buffer
 	D3D11_BUFFER_DESC vertexBufferDesc;
@@ -360,20 +413,57 @@ bool Graphics::initializeScene()
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
 
-	// subresource data for vertex buffer
+	// Create subresource data for vertex buffer
 	D3D11_SUBRESOURCE_DATA vertexBufferData;
 	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
 	vertexBufferData.pSysMem = v;
 
-	// create the buffer
-	HRESULT hr = this->device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, this->vertexBuffer.GetAddressOf());
+	// Create vertex buffer
+	HRESULT hr = this->device->CreateBuffer(
+		&vertexBufferDesc, &vertexBufferData, this->vertexBuffer.GetAddressOf());
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create vertex buffer");
 		return false;
 	}
 
-	hr = dx::CreateWICTextureFromFile(this->device.Get(), L"Data/Textures/boi.png", nullptr, myTexture.GetAddressOf());
+	/* INDECES BUFFER (of vertices) */
+
+	// Create Indeces Array
+	DWORD indeces[]
+	{
+		0,1,2,
+		0,2,3,
+	};// using indeces fixes reusing multiple instances of the same vertex data when drawing pixels
+	
+	// Create description for indeces buffer
+	D3D11_BUFFER_DESC indecesBufferDesc;
+	ZeroMemory(&indecesBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	indecesBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indecesBufferDesc.ByteWidth = sizeof(DWORD) * ARRAYSIZE(indeces);
+	indecesBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indecesBufferDesc.CPUAccessFlags = 0;
+	indecesBufferDesc.MiscFlags = 0;
+
+	// Create indeces Subresource Data
+	D3D11_SUBRESOURCE_DATA indecesBufferData;
+	indecesBufferData.pSysMem = indeces;
+	hr = this->device->CreateBuffer(
+		&indecesBufferDesc, &indecesBufferData, this->indecesBuffer.GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create indeces buffer.");
+		return false;
+	}
+
+	/* TEXTURE LOADING */
+
+	// Load a texture
+	hr = dx::CreateWICTextureFromFile(
+		this->device.Get(), L"Data/Textures/boi.png", nullptr, myTexture.GetAddressOf());
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create wic texture from file");

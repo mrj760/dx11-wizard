@@ -40,6 +40,9 @@ private:
 	// vertex buffer(s)
 	mwrl::ComPtr <ID3D11Buffer> vertexBuffer;
 
+	// indeces buffer for vertex data
+	mwrl::ComPtr<ID3D11Buffer> indecesBuffer;
+
 	// depth stencil
 	mwrl::ComPtr<ID3D11DepthStencilView> depthStencilView;
 	mwrl::ComPtr<ID3D11Texture2D> depthStencilBuffer;
