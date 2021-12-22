@@ -26,6 +26,8 @@ void Graphics::renderFrame()
 	this->deviceContext-> // set topology
 		IASetPrimitiveTopology(
 			D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	this->deviceContext->
+		RSSetState(this->rasterizerState.Get());
 
 	this->deviceContext-> // set vertex shader
 		VSSetShader(vertexshader.getShader(), NULL, 0);
@@ -225,6 +227,23 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 
 	// set the viewport
 	this->deviceContext->RSSetViewports(1/*1 viewport*/, &viewport);
+
+	// Create rasterizer state
+	D3D11_RASTERIZER_DESC rasterizerDesc;
+	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+	// solid fill (as opposed to wireframe)
+	rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+	// don't draw back-facing triangles (clockwise pixels are front-facing, counter-clockwise is back-facing)
+	rasterizerDesc.CullMode= D3D11_CULL_MODE::D3D11_CULL_BACK;
+
+	hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerState.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create rasterizer state");
+		return false;
+	}
+
 
 	return true;
 }
