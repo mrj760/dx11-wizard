@@ -14,8 +14,12 @@ bool Graphics::initialize(HWND hwnd, int width, int height)
 
 void Graphics::renderFrame()
 {
+	/* BACKGROUND */
+
 	// Determine what background color will be
 	float bgcolor[] = { 0.1f, 0.1f, 0.1f, 1.0f }; // Grey background
+
+	/* CLEAR FRAME */
 	
 	// clear the render target (clear the window) and clear the depth stencil
 	this->deviceContext->ClearRenderTargetView(
@@ -27,74 +31,80 @@ void Graphics::renderFrame()
 		1.0f, // set depth to 1
 		0); // initialize stencil to 0
 
+	/* INPUT LAYOUT */
+
 	// set input layout
 	this->deviceContext-> 
 		IASetInputLayout(this->vertexshader.getInputLayout());
 	
+	/* TOPOLOGY */
+
 	// set topology
 	this->deviceContext-> 
 		IASetPrimitiveTopology(
 			D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
+	/* RASTERIZER */
 	// set rasterizer state
 	this->deviceContext->
 		RSSetState(this->rasterizerState.Get());
 
+	/* DEPTH STENCIL */
 	// set depth stencil state
 	this->deviceContext->OMSetDepthStencilState(depthStencilState.Get(), 0);
 
+	/* SAMPLER */
+
 	// Set sampler state
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+
+	/* SHADERS */
 
 	// Set shaders
 	this->deviceContext-> // set vertex shader
 		VSSetShader(vertexshader.getShader(), NULL, 0);
 	this->deviceContext-> // set pixel shader
 		PSSetShader(pixelshader.getShader(), NULL, 0);
+	// set Shader Resources
+	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
 
-	UINT stride = sizeof(Vertex);	// how big of a data size to iterate over
-	UINT offset = 0;				// at which slot to begin when reading in the vertex buffer data
+	/* BUFFERS */
 
 	// Update Constant Buffer
-	CB_VS_vertexshader data;// vv
-	data.xOffset = 0.0f;	// vv
-	data.yOffset = 0.5f;	// ^^ Take this struct data and copy it into the mapped resource pData
-	D3D11_MAPPED_SUBRESOURCE mappedRes; // needed to access data for constant buffer
-	deviceContext->Map( //
-		constbuffer.Get(), // pointer to constant buffer
-		0, 
-		D3D11_MAP_WRITE_DISCARD, 
-		0, 
-		&mappedRes);
-	CopyMemory(
-		mappedRes.pData, // where to copy to
-		&data, // copy the struct data
-		sizeof(CB_VS_vertexshader)); // it's this size, Mr. Computer
-	deviceContext->Unmap(constbuffer.Get(), 0); // Allow GPU to access this data again
-	deviceContext->VSSetConstantBuffers(
-		0, // registered at slot 0
-		1, // updating one constant buffer
-		constbuffer.GetAddressOf());
+	static float xOffset = 0.0f, yOffset = 0.5f;
+	yOffset -= yOffset >= -.5f? 0.005f : 0.f;
+	constantBuffer.data.xOffset = xOffset;	// vv
+	constantBuffer.data.yOffset = yOffset;	// ^^ Take this struct data and copy it into the mapped resource pData
+	if (!constantBuffer.ApplyChanges())
+	{
+		return; // if fails do not render this frame
+	}
+	deviceContext->VSSetConstantBuffers(0, 1, constantBuffer.getAddressOf());
 
-	// Set Buffers
-	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
+	// Update Vertex Buffer
+	UINT offset = 0;	// at which slot to begin when reading in the vertex buffer data
 	this->deviceContext->IASetVertexBuffers( // vertices for our context
 		0,								// start slot
 		1,								// for now: only one buffer 
 		vertexBuffer.getAddressOf(),	// vertex buffer to use
-		vertexBuffer.stridePtr(),						// how big of a data size to iterate over
+		vertexBuffer.stridePtr(),		// how big of a data size to iterate over
 		&offset);						// at which slot to begin when reading in the vertex buffer data
+
+	// Update Index Buffer
 	this->deviceContext->IASetIndexBuffer( // indices for our context
 		indicesBuffer.get(), // indeces buffer to use
 		DXGI_FORMAT_R32_UINT, // reading 32 bit uints
 		0); // no offset
+
+	/* DRAWING */
 	
+	// Draw Index Buffer data
 	this->deviceContext->DrawIndexed(
 		indicesBuffer.getBufferSize(), // # of vertices to draw
 		0, // initial vertex index
 		0); // base vertex index
 
-	// Draw Text
+	// Draw Text "Hello World" top left
 	spriteBatch->Begin();
 	spriteFont->DrawString(
 		spriteBatch.get(), 
@@ -106,6 +116,8 @@ void Graphics::renderFrame()
 		dx::XMFLOAT2(1,1)	// scale
 		);					// default effects and layer depth parameters
 	spriteBatch->End();
+
+	/* PRESENTING */
 
 	// present our frame
 	this->swapChain->Present(
@@ -462,16 +474,7 @@ bool Graphics::initializeScene()
 	}
 
 	/* CONSTANT BUFFER(S) */
-	D3D11_BUFFER_DESC constbufferDesc;
-	constbufferDesc.Usage = D3D11_USAGE_DYNAMIC; // dynamic usage, can be changed
-	constbufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; // constant buffer
-	constbufferDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE; // need CPU to write to this buffer
-	constbufferDesc.MiscFlags = 0;	
-	constbufferDesc.ByteWidth = static_cast<UINT>(
-		sizeof(CB_VS_vertexshader) + (16 - sizeof(CB_VS_vertexshader))); // must be "16 byte aligned" so align to be 16 bytes
-	constbufferDesc.StructureByteStride = 0;
-
-	hr = device->CreateBuffer(&constbufferDesc, 0, constbuffer.GetAddressOf());
+	hr = constantBuffer.initialize(device.Get(), deviceContext.Get());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to init constant buffer");

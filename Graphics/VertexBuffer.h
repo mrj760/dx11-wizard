@@ -1,3 +1,8 @@
+/**
+*	VERTEX BUFFER
+*		Buffer which contains the vertices used to draw geometry
+*/
+
 #pragma once
 #ifndef VertexBuffer_h__
 #define VertexVuffer_h__

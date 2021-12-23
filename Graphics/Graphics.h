@@ -1,3 +1,11 @@
+/*
+*	GRAPHICS MANAGER
+*		Initializes DirectX, Shaders, Scenes
+*		Updates graphics buffers
+*		Renders frames
+*		Uses handles to windows
+*/
+
 #pragma once
 #include "AdapterReader.h"
 #include "Shaders.h"
@@ -7,6 +15,7 @@
 #include <WICTextureLoader.h>
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ConstantBuffer.h"
 #include "ConstantBufferTypes.h"
 
 namespace mwrl = Microsoft::WRL;
@@ -40,8 +49,7 @@ private:
 	// shaders
 	VertexShader vertexshader;
 	PixelShader pixelshader;
-
-	mwrl::ComPtr<ID3D11Buffer> constbuffer;
+	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
 
 	// vertex buffer(s)
 	VertexBuffer<Vertex> vertexBuffer;

@@ -1,3 +1,5 @@
+
+
 #pragma once
 #include "KeyboardEvent.h"
 #include <queue>
@@ -13,6 +15,7 @@ public:
 	// if the key buffer(s) is/are not empty then we will read the keys
 	bool isKeyBufferEmpty();
 	KeyboardEvent readKey();
+
 	// manages addition of keys to the key queue(s)
 	void onKeyPress(const unsigned char key);
 	void onKeyRelease(const unsigned char key);
@@ -20,6 +23,7 @@ public:
 	// if the char buffer(s) is/are not empty then we will read the chars
 	bool isCharBufferEmpty();
 	unsigned char readChar();
+
 	// manages addition of chars to the char queue(s)
 	void onCharPress(const unsigned char key);
 
