@@ -18,6 +18,7 @@
 #include "ConstantBuffer.h"
 #include "ConstantBufferTypes.h"
 #include "Camera.h"
+#include "../Base/Timer.h"
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -38,6 +39,8 @@ private:
 
 	// Window information
 	int width=0, height=0; // width and height
+
+	Timer timer;
 
 	// Device
 	mwrl::ComPtr<ID3D11Device> device;

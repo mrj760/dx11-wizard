@@ -162,6 +162,7 @@
     <ClCompile Include="Base\StringConverter.cpp" />
     <ClCompile Include="Base\WindowContainer.cpp" />
     <ClCompile Include="Graphics\Shaders.cpp" />
+    <ClCompile Include="Base\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Graphics\Camera.h" />
@@ -182,6 +183,7 @@
     <ClInclude Include="Graphics\Vertex.h" />
     <ClInclude Include="Graphics\Shaders.h" />
     <ClInclude Include="Graphics\VertexBuffer.h" />
+    <ClInclude Include="Base\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

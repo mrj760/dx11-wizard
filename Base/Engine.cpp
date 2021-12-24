@@ -2,6 +2,8 @@
 
 bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::string window_class, int width, int height)
 {
+	timer.startTimer();
+
 	//keyboard.setAutoRepeatChars(true);
 	if /* we fail to initialize our render window or our graphics, return false*/
 	(!this->render_window.Initialize
@@ -23,6 +25,9 @@ bool Engine::ProcessMessages()
 
 void Engine::Update()
 {
+	float dt = timer.elapsedMS();
+	timer.restartTimer();
+
 	while (/*Char buffer NOT empty*/!keyboard.isCharBufferEmpty())
 	{
 		unsigned char ch = keyboard.readChar();
@@ -42,36 +47,37 @@ void Engine::Update()
 		if (mouse.isRightDown() && me.getType() == MouseEvent::EventType::RAW_MOVE)
 		{
 			// adjust camera by change in mouse direction * sensitivity
-			gfx.cam.adjustRotation(me.getPosY() * 0.01f, me.getPosX() * 0.01f, 0.0f);
+			float sens = 0.008f;
+			gfx.cam.adjustRotation(me.getPosY() * sens, me.getPosX() * sens, 0.0f);
 		}
 	}
 
 	/* CAMERA */
-	const float camspeed = 0.02f;
+	const float camspeed = 0.002f;
 
 	if (keyboard.isPressed('W'))
 	{
-		gfx.cam.adjustPosition(gfx.cam.getForward() * camspeed);
+		gfx.cam.adjustPosition(gfx.cam.getForward() * camspeed * dt);
 	}
 	if (keyboard.isPressed('A'))
 	{
-		gfx.cam.adjustPosition(gfx.cam.getLeft() * camspeed);
+		gfx.cam.adjustPosition(gfx.cam.getLeft() * camspeed * dt);
 	}
 	if (keyboard.isPressed('S'))
 	{
-		gfx.cam.adjustPosition(gfx.cam.getBackward() * camspeed);
+		gfx.cam.adjustPosition(gfx.cam.getBackward() * camspeed * dt);
 	}
 	if (keyboard.isPressed('D'))
 	{
-		gfx.cam.adjustPosition(gfx.cam.getRight() * camspeed);
+		gfx.cam.adjustPosition(gfx.cam.getRight() * camspeed * dt);
 	}
 	if (keyboard.isPressed(VK_SPACE))
 	{
-		gfx.cam.adjustPosition(gfx.cam.getUp() * camspeed);
+		gfx.cam.adjustPosition(gfx.cam.getUp() * camspeed * dt);
 	}
 	if (keyboard.isPressed('Z'))
 	{
-		gfx.cam.adjustPosition(gfx.cam.getDown() * camspeed);
+		gfx.cam.adjustPosition(gfx.cam.getDown() * camspeed * dt);
 	}
 }
 

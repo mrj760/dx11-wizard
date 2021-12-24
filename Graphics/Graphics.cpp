@@ -3,6 +3,8 @@
 
 bool Graphics::initialize(HWND hwnd, int width, int height)
 {
+	timer.startTimer();
+
 	this->width = width;
 	this->height = height;
 	if (!initializeDirectX(hwnd))
@@ -16,6 +18,17 @@ bool Graphics::initialize(HWND hwnd, int width, int height)
 
 void Graphics::renderFrame()
 {
+	/* TIMER */
+	static int fpsCount = 0;
+	static std::string fpsStr = "FPS: 0";
+	fpsCount += 1;
+	if (timer.elapsedMS() > 1000.0)
+	{
+		fpsStr = "FPS: " + std::to_string(fpsCount);
+		fpsCount = 0;
+		timer.restartTimer();
+	}
+
 	/* BACKGROUND */
 
 	// Determine what background color will be
@@ -120,11 +133,12 @@ void Graphics::renderFrame()
 		0, // initial vertex index
 		0); // base vertex index
 
-	// Draw Text "Hello World" top left
+	// Draw Text "Hello World" and the FPS at top left
 	spriteBatch->Begin();
+	std::wstring str = L"Hello World\nFPS: " + StringConverter::StringToWide(fpsStr);
 	spriteFont->DrawString(
 		spriteBatch.get(), 
-		L"Hello World", 
+		str.c_str(),
 		dx::XMFLOAT2(0, 5), // position
 		dx::Colors::Bisque, // color
 		0,					// rotation
@@ -137,7 +151,7 @@ void Graphics::renderFrame()
 
 	// present our frame
 	this->swapChain->Present(
-		1,		// Vsync-on (1 sync interval) 
+		0,		// Vsync (1: On [1 sync interval] , 0: off) 
 		NULL);	//Null flags
 }
 
