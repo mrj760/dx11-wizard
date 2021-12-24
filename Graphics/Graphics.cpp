@@ -3,8 +3,8 @@
 
 bool Graphics::initialize(HWND hwnd, int width, int height)
 {
-	this->winW = width;
-	this->winH = height;
+	this->width = width;
+	this->height = height;
 	if (!initializeDirectX(hwnd))
 		return false;
 
@@ -69,37 +69,20 @@ void Graphics::renderFrame()
 		PSSetShader(pixelshader.getShader(), NULL, 0);
 	// set Shader Resources
 	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
-
+	
 	/* BUFFERS */
 
 	// Update Constant Buffer
 	dx::XMMATRIX worldOrigin = dx::XMMatrixIdentity(); // world origin
 
-	static dx::XMVECTOR 
-		eyePos = dx::XMVectorSet(0.0f, -4.0f, -2.0f, 0.0f), // eye position
-		focusPos = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), // direction in which to look
-		upDir = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // up direction
+	// move cam up and down
+	float camY = cam.getpositionFloat3().y;
+	static bool down = true;
+	if (camY < -1.5f || camY > 1.5f)
+		down = !down;
+	cam.adjustPosition(0.0f, down ? 0.01f : -0.01f, 0.0f);
 
-	// adjust eye position
-	dx::XMFLOAT3 eyePosf3;
-	dx::XMStoreFloat3(&eyePosf3, eyePos);
-	eyePosf3.y += 0.01f;
-	eyePos = dx::XMLoadFloat3(&eyePosf3);
-
-	dx::XMMATRIX view = dx::XMMatrixLookAtLH(eyePos, focusPos, upDir); // look at calculated for left-handed coord sys
-
-	float 
-		fov = 90.0f, // fov in degrees
-		fovRad = (fov / 360.0f) * dx::XM_2PI, // fov in radians
-		aspectRatio = (float)winW / (float)winH, // aspectRatio of window
-		nearZ = 0.1f, // near Z of frustum
-		farZ = 1000.0f; // far Z of frustum
-
-	dx::XMMATRIX projection = // projection from camera looking in focus direction
-		dx::XMMatrixPerspectiveFovLH(fovRad, aspectRatio, nearZ, farZ);
-	
-
-	constantBuffer.data.mat = worldOrigin * view  * projection; // all vertices set to (world origin* view * projection)
+	constantBuffer.data.mat = worldOrigin * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
 	constantBuffer.data.mat = dx::XMMatrixTranspose(constantBuffer.data.mat); // turn it from column_major to row_major format
 	if (!constantBuffer.ApplyChanges())
 		return;
@@ -244,8 +227,8 @@ bool Graphics::initializeDirectX(HWND hwnd)
 	// Create description of swapchain
 	DXGI_SWAP_CHAIN_DESC scd; /* Contains width, height, refresh rate, format, scanline ordering, and scaling */
 	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
-	scd.BufferDesc.Width = winW;
-	scd.BufferDesc.Height = winH;
+	scd.BufferDesc.Width = width;
+	scd.BufferDesc.Height = height;
 	scd.BufferDesc.RefreshRate.Numerator = 60;	// if vsync turned off (or on but in windowed mode), refresh rate does nothing
 	scd.BufferDesc.RefreshRate.Denominator = 1;
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; /*
@@ -328,8 +311,8 @@ bool Graphics::initializeDirectX(HWND hwnd)
 
 	// Create description of depth stencil buffer
 	D3D11_TEXTURE2D_DESC depthStencilTexDesc;
-	depthStencilTexDesc.Width = winW;
-	depthStencilTexDesc.Height = winH;
+	depthStencilTexDesc.Width = width;
+	depthStencilTexDesc.Height = height;
 	depthStencilTexDesc.MipLevels = 1;	// 
 	depthStencilTexDesc.ArraySize = 1;	// 
 	depthStencilTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;	// 32 bit z-buffer format. 24 bits for depth, 8 bits for stencil
@@ -390,8 +373,8 @@ bool Graphics::initializeDirectX(HWND hwnd)
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = winW;
-	viewport.Height = winH;
+	viewport.Width = width;
+	viewport.Height = height;
 	viewport.MinDepth = 0.f;
 	viewport.MaxDepth = 1.f;
 
@@ -505,6 +488,9 @@ bool Graphics::initializeScene()
 		ErrorLogger::Log(hr, "Failed to init constant buffer");
 		return false;
 	}
+
+	cam.setPosition(0.0f, 0.0f, -2.0f);
+	cam.setProjectionValues(90.0f /*FOV*/, (float)width / (float)height /*Aspect Ratio*/, 0.1f/*near Z*/, 1000.0f/*far Z*/);
 
 	return true;
 }
