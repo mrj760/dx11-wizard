@@ -3,7 +3,9 @@
 
 bool Graphics::initialize(HWND hwnd, int width, int height)
 {
-	if (!initializeDirectX(hwnd, width, height))
+	this->winW = width;
+	this->winH = height;
+	if (!initializeDirectX(hwnd))
 		return false;
 
 	if (!initializeShaders())
@@ -71,15 +73,38 @@ void Graphics::renderFrame()
 	/* BUFFERS */
 
 	// Update Constant Buffer
-	constantBuffer.data.mat = dx::XMMatrixIdentity(); // reset matrix containing vertex data
-	constantBuffer.data.mat = // multiply matrices to alter the vertex data
-		dx::XMMatrixScaling(.5f,.5f,.1f) * // half width and height
-		dx::XMMatrixRotationRollPitchYaw(0.0f, 0.0f, dx::XM_PIDIV2) * // rotate half radian (90 deg) along roll counter clockwise
-		dx::XMMatrixTranslation(0.f, -.5f, 0.f); // move down a bit
+	dx::XMMATRIX worldOrigin = dx::XMMatrixIdentity(); // world origin
+
+	static dx::XMVECTOR 
+		eyePos = dx::XMVectorSet(0.0f, -4.0f, -2.0f, 0.0f), // eye position
+		focusPos = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), // direction in which to look
+		upDir = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // up direction
+
+	// adjust eye position
+	dx::XMFLOAT3 eyePosf3;
+	dx::XMStoreFloat3(&eyePosf3, eyePos);
+	eyePosf3.y += 0.01f;
+	eyePos = dx::XMLoadFloat3(&eyePosf3);
+
+	dx::XMMATRIX view = dx::XMMatrixLookAtLH(eyePos, focusPos, upDir); // look at calculated for left-handed coord sys
+
+	float 
+		fov = 90.0f, // fov in degrees
+		fovRad = (fov / 360.0f) * dx::XM_2PI, // fov in radians
+		aspectRatio = (float)winW / (float)winH, // aspectRatio of window
+		nearZ = 0.1f, // near Z of frustum
+		farZ = 1000.0f; // far Z of frustum
+
+	dx::XMMATRIX projection = // projection from camera looking in focus direction
+		dx::XMMatrixPerspectiveFovLH(fovRad, aspectRatio, nearZ, farZ);
+	
+
+	constantBuffer.data.mat = worldOrigin * view  * projection; // all vertices set to (world origin* view * projection)
 	constantBuffer.data.mat = dx::XMMatrixTranspose(constantBuffer.data.mat); // turn it from column_major to row_major format
 	if (!constantBuffer.ApplyChanges())
 		return;
-	deviceContext->VSSetConstantBuffers(0, 1, constantBuffer.getAddressOf());
+	deviceContext-> // apply the changes to the constant buffer
+		VSSetConstantBuffers(0, 1, constantBuffer.getAddressOf());
 
 	// Update Vertex Buffer
 	UINT offset = 0;	// at which slot to begin when reading in the vertex buffer data
@@ -199,7 +224,7 @@ bool Graphics::initializeShaders()
 	return true;
 }
 
-bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
+bool Graphics::initializeDirectX(HWND hwnd)
 {
 	/* ADAPTERS */
 
@@ -219,8 +244,8 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	// Create description of swapchain
 	DXGI_SWAP_CHAIN_DESC scd; /* Contains width, height, refresh rate, format, scanline ordering, and scaling */
 	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
-	scd.BufferDesc.Width = width;
-	scd.BufferDesc.Height = height;
+	scd.BufferDesc.Width = winW;
+	scd.BufferDesc.Height = winH;
 	scd.BufferDesc.RefreshRate.Numerator = 60;	// if vsync turned off (or on but in windowed mode), refresh rate does nothing
 	scd.BufferDesc.RefreshRate.Denominator = 1;
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; /*
@@ -303,8 +328,8 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 
 	// Create description of depth stencil buffer
 	D3D11_TEXTURE2D_DESC depthStencilTexDesc;
-	depthStencilTexDesc.Width = width;
-	depthStencilTexDesc.Height = height;
+	depthStencilTexDesc.Width = winW;
+	depthStencilTexDesc.Height = winH;
 	depthStencilTexDesc.MipLevels = 1;	// 
 	depthStencilTexDesc.ArraySize = 1;	// 
 	depthStencilTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;	// 32 bit z-buffer format. 24 bits for depth, 8 bits for stencil
@@ -365,8 +390,8 @@ bool Graphics::initializeDirectX(HWND hwnd, int width, int height)
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = width;
-	viewport.Height = height;
+	viewport.Width = winW;
+	viewport.Height = winH;
 	viewport.MinDepth = 0.f;
 	viewport.MaxDepth = 1.f;
 
@@ -425,10 +450,10 @@ bool Graphics::initializeScene()
 	// Textured Square
 	Vertex v[] =
 	{
-		Vertex(-0.5f,  -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left - [0]
-		Vertex(-0.5f,   0.5f, 1.0f, 0.0f, 0.0f), //Top Left - [1]
-		Vertex(0.5f,   0.5f, 1.0f, 1.0f, 0.0f), //Top Right - [2]
-		Vertex(0.5f,  -0.5f, 1.0f, 1.0f, 1.0f), //Bottom Right - [3]
+		Vertex(-0.5f,  -0.5f, 0.0f, 0.0f, 1.0f), //Bottom Left - [0]
+		Vertex(-0.5f,   0.5f, 0.0f, 0.0f, 0.0f), //Top Left - [1]
+		Vertex(0.5f,   0.5f, 0.0f, 1.0f, 0.0f), //Top Right - [2]
+		Vertex(0.5f,  -0.5f, 0.0f, 1.0f, 1.0f), //Bottom Right - [3]
 		//Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  // --repeat
 	};
 

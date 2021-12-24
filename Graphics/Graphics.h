@@ -29,8 +29,11 @@ public:
 	void renderFrame();
 private:
 	bool initializeShaders();
-	bool initializeDirectX(HWND hwnd, int width, int height); // does the actual initialization
+	bool initializeDirectX(HWND hwnd); // does the actual initialization
 	bool initializeScene();
+
+	// window information
+	int winW=0, winH=0; // width and height
 
 	// device
 	mwrl::ComPtr<ID3D11Device> device;
