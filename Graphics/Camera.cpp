@@ -147,6 +147,36 @@ void Camera::setTargetPos(f3 targetPos)
 	setRotation(pitch, yaw, 0.0f);
 }
 
+const vec& Camera::getForward()
+{
+	return forward;
+}
+
+const vec& Camera::getLeft()
+{
+	return left;
+}
+
+const vec& Camera::getUp()
+{
+	return up;
+}
+
+const vec& Camera::getDown()
+{
+	return down;
+}
+
+const vec& Camera::getBackward()
+{
+	return backward;
+}
+
+const vec& Camera::getRight()
+{
+	return right;
+}
+
 bool Camera::equals(f3 a, f3 b)
 {
 	return a.x == b.x && a.y == b.y && a.z == b.z;
@@ -164,8 +194,18 @@ void Camera::updateViewMatrix()
 	camTarget += posVec;
 
 	// Calc. up direction based on cam.'s current rot.
-	vec up = XMVector3TransformCoord(DEFAULT_UP_VECTOR, camRotMatrix);
+	vec upDir = XMVector3TransformCoord(DEFAULT_UP_VECTOR, camRotMatrix);
 	
 	// Rebuild view matrix with position, target and up
-	viewMatrix = XMMatrixLookAtLH(posVec, camTarget, up);
+	viewMatrix = XMMatrixLookAtLH(posVec, camTarget, upDir);
+
+	// Update fwd/backward/left/right vectors
+	mx rotMatrix = XMMatrixRotationRollPitchYaw(rot.x, rot.y, 0.0f); // always want roll to be the same.
+
+	forward = XMVector3TransformCoord(DEFAULT_FORWARD_VECTOR, rotMatrix);
+	backward = XMVector3TransformCoord(DEFAULT_BACKWARD_VECTOR, rotMatrix);
+	right = XMVector3TransformCoord(DEFAULT_RIGHT_VECTOR, rotMatrix);
+	left = XMVector3TransformCoord(DEFAULT_LEFT_VECTOR, rotMatrix);
+	up = XMVector3TransformCoord(DEFAULT_UP_VECTOR, rotMatrix);
+	down = XMVector3TransformCoord(DEFAULT_DOWN_VECTOR, rotMatrix);
 }

@@ -45,6 +45,14 @@ public:
 	// Look-At Set
 	void setTargetPos(f3 targetPos);
 
+	// Get Direction vectors
+	const vec& getForward();
+	const vec& getBackward();
+	const vec& getRight();
+	const vec& getLeft();
+	const vec& getUp();
+	const vec& getDown();
+
 
 private:
 	bool equals(f3 a, f3 b);
@@ -67,7 +75,15 @@ private:
 	mx projMatrix;
 
 	// constant values. Left handed coordinates so +z forward, +y up
-	const vec DEFAULT_FORWARD_VECTOR = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	const vec DEFAULT_UP_VECTOR = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	const vec
+		DEFAULT_FORWARD_VECTOR = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
+		DEFAULT_BACKWARD_VECTOR = XMVectorSet(0.0, 0.0f, -1.0f, 0.0f),
+		DEFAULT_LEFT_VECTOR = XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f),
+		DEFAULT_RIGHT_VECTOR = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f),
+		DEFAULT_UP_VECTOR = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f),
+		DEFAULT_DOWN_VECTOR = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+
+	vec
+		forward, left, right, backward, up, down;
 };
 

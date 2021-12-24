@@ -75,7 +75,7 @@ void Graphics::renderFrame()
 	dx::XMMATRIX worldOrigin = dx::XMMatrixIdentity(); // world origin
 
 	// move cam up and down
-	f3 campos = cam.getpositionFloat3();
+	/*f3 campos = cam.getpositionFloat3();
 	static bool down = true, right = true;
 	if (campos.y < -1.5f || campos.y > 1.5f)
 		down = !down;
@@ -85,7 +85,7 @@ void Graphics::renderFrame()
 		right ? 0.01f : -0.01f, 
 		down ? 0.01f : -0.01f, 
 		0.0f);
-	cam.setTargetPos(f3(0.f, 0.f, 0.f));
+	cam.setTargetPos(f3(0.f, 0.f, 0.f));*/
 
 	/* BUFFERS */
 

@@ -28,6 +28,9 @@ class Graphics
 public:
 	bool initialize(HWND hwnd, int width, int height); // returns whether initialization of DirectX was successful
 	void renderFrame();
+	// Camera
+	Camera cam;
+
 private:
 	bool initializeShaders();
 	bool initializeDirectX(HWND hwnd); // does the actual initialization
@@ -79,8 +82,5 @@ private:
 
 	// Shader resource (texture)
 	mwrl::ComPtr<ID3D11ShaderResourceView> myTexture;
-
-	// Camera
-	Camera cam;
 };
 

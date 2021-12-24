@@ -32,36 +32,46 @@ void Engine::Update()
 	{
 		KeyboardEvent kbe = keyboard.readKey();
 		unsigned char key = kbe.getKeyCode();
-		
 	}
 
 	while (/*Mouse event buffer is NOT empty*/!mouse.isEventBufferEmpty())
 	{
 		MouseEvent me = mouse.readEvent();
-		// Move Test
-		/*std::string outmsg = 
-			"X: " + std::to_string(me.getPosX()) +
-			"Y: " + std::to_string(me.getPosY()) + "\n";
-		OutputDebugStringA(outmsg.c_str());*/
 
-		// Scroll Test
-		/*if (me.getType() == MouseEvent::EventType::WheelUp)
+		/* CAMERA */
+		if (mouse.isRightDown() && me.getType() == MouseEvent::EventType::RAW_MOVE)
 		{
-			OutputDebugStringA("Scroll up\n");
+			// adjust camera by change in mouse direction * sensitivity
+			gfx.cam.adjustRotation(me.getPosY() * 0.01f, me.getPosX() * 0.01f, 0.0f);
 		}
-		else if (me.getType() == MouseEvent::EventType::WheelDown)
-		{
-			OutputDebugStringA("Scroll Down\n");
-		}*/
+	}
 
-		// Raw input Test
-		/*if (me.getType() == MouseEvent::EventType::RAW_MOVE)
-		{
-			std::string outmsg =
-				"X: " + std::to_string(me.getPosX()) +
-				"Y: " + std::to_string(me.getPosY()) + "\n";
-			OutputDebugStringA(outmsg.c_str());
-		}*/
+	/* CAMERA */
+	const float camspeed = 0.02f;
+
+	if (keyboard.isPressed('W'))
+	{
+		gfx.cam.adjustPosition(gfx.cam.getForward() * camspeed);
+	}
+	if (keyboard.isPressed('A'))
+	{
+		gfx.cam.adjustPosition(gfx.cam.getLeft() * camspeed);
+	}
+	if (keyboard.isPressed('S'))
+	{
+		gfx.cam.adjustPosition(gfx.cam.getBackward() * camspeed);
+	}
+	if (keyboard.isPressed('D'))
+	{
+		gfx.cam.adjustPosition(gfx.cam.getRight() * camspeed);
+	}
+	if (keyboard.isPressed(VK_SPACE))
+	{
+		gfx.cam.adjustPosition(gfx.cam.getUp() * camspeed);
+	}
+	if (keyboard.isPressed('Z'))
+	{
+		gfx.cam.adjustPosition(gfx.cam.getDown() * camspeed);
 	}
 }
 
