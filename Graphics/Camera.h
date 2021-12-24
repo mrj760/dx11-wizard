@@ -42,8 +42,13 @@ public:
 	void adjustRotation(const vec& rot);
 	void adjustRotation(float x, float y, float z);
 
+	// Look-At Set
+	void setTargetPos(f3 targetPos);
+
 
 private:
+	bool equals(f3 a, f3 b);
+
 	// Update the view matrix whenever position/rotation modified
 	void updateViewMatrix();
 

@@ -70,18 +70,26 @@ void Graphics::renderFrame()
 	// set Shader Resources
 	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
 	
-	/* BUFFERS */
+	/* CAMERA */
 
-	// Update Constant Buffer
 	dx::XMMATRIX worldOrigin = dx::XMMatrixIdentity(); // world origin
 
 	// move cam up and down
-	float camY = cam.getpositionFloat3().y;
-	static bool down = true;
-	if (camY < -1.5f || camY > 1.5f)
+	f3 campos = cam.getpositionFloat3();
+	static bool down = true, right = true;
+	if (campos.y < -1.5f || campos.y > 1.5f)
 		down = !down;
-	cam.adjustPosition(0.0f, down ? 0.01f : -0.01f, 0.0f);
+	if (campos.x < -1.5f || campos.x > 1.5f)
+		right = !right;
+	cam.adjustPosition(
+		right ? 0.01f : -0.01f, 
+		down ? 0.01f : -0.01f, 
+		0.0f);
+	cam.setTargetPos(f3(0.f, 0.f, 0.f));
 
+	/* BUFFERS */
+
+	// Update Constant Buffer
 	constantBuffer.data.mat = worldOrigin * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
 	constantBuffer.data.mat = dx::XMMatrixTranspose(constantBuffer.data.mat); // turn it from column_major to row_major format
 	if (!constantBuffer.ApplyChanges())
