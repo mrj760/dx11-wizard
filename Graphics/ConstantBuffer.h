@@ -50,14 +50,14 @@ public:
 
 		// Describe constant buffer
 		D3D11_BUFFER_DESC constantBufferDesc;
-		ZeroMemory(&constantBufferDesc, sizeof(D3D11_BUFFER_DESC)); // yes/no?
+		//ZeroMemory(&constantBufferDesc, sizeof(D3D11_BUFFER_DESC)); // yes/no?
 		constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		constantBufferDesc.MiscFlags = 0;
 		constantBufferDesc.ByteWidth = 
 			static_cast<UINT>(sizeof(T) + 
-				(16 - (sizeof(T) % 16))); // align to 16 bytes size
+				(16 - (sizeof(T) % 16))); // align byte size to a factor // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules
 		constantBufferDesc.StructureByteStride = 0;
 
 		// Create constant buffer

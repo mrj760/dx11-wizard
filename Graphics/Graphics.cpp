@@ -71,14 +71,14 @@ void Graphics::renderFrame()
 	/* BUFFERS */
 
 	// Update Constant Buffer
-	static float xOffset = 0.0f, yOffset = 0.5f;
-	yOffset -= yOffset >= -.5f? 0.005f : 0.f;
-	constantBuffer.data.xOffset = xOffset;	// vv
-	constantBuffer.data.yOffset = yOffset;	// ^^ Take this struct data and copy it into the mapped resource pData
+	constantBuffer.data.mat = dx::XMMatrixIdentity(); // reset matrix containing vertex data
+	constantBuffer.data.mat = // multiply matrices to alter the vertex data
+		dx::XMMatrixScaling(.5f,.5f,.1f) * // half width and height
+		dx::XMMatrixRotationRollPitchYaw(0.0f, 0.0f, dx::XM_PIDIV2) * // rotate half radian (90 deg) along roll counter clockwise
+		dx::XMMatrixTranslation(0.f, -.5f, 0.f); // move down a bit
+	constantBuffer.data.mat = dx::XMMatrixTranspose(constantBuffer.data.mat); // turn it from column_major to row_major format
 	if (!constantBuffer.ApplyChanges())
-	{
-		return; // if fails do not render this frame
-	}
+		return;
 	deviceContext->VSSetConstantBuffers(0, 1, constantBuffer.getAddressOf());
 
 	// Update Vertex Buffer
