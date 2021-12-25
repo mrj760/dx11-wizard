@@ -19,6 +19,9 @@
 #include "ConstantBufferTypes.h"
 #include "Camera.h"
 #include "../Base/Timer.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_win32.h"
+#include "ImGui/imgui_impl_dx11.h"
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;

@@ -1,17 +1,32 @@
 #include "Graphics.h"
+namespace imgui = ImGui;
 
 
 bool Graphics::initialize(HWND hwnd, int width, int height)
 {
+	// begin timer
 	timer.startTimer();
 
+	// setup window dimensions
 	this->width = width;
 	this->height = height;
+	
+	// setup directX with handle to window
 	if (!initializeDirectX(hwnd))
 		return false;
 
+	// setup various shaders
 	if (!initializeShaders())
 		return false;
+
+	// Setup ImGUI
+	IMGUI_CHECKVERSION();	// 
+	imgui::CreateContext();	// 
+	ImGuiIO& io = imgui::GetIO();	// 
+	ImGui_ImplWin32_Init(hwnd);	// Needs handle to window for Windows
+	ImGui_ImplDX11_Init(device.Get(), deviceContext.Get());	// Needs device and context for DirectX
+	imgui::StyleColorsDark();	// nice
+
 
 	return true;
 }
@@ -146,6 +161,19 @@ void Graphics::renderFrame()
 		dx::XMFLOAT2(1,1)	// scale
 		);					// default effects and layer depth parameters
 	spriteBatch->End();
+
+	/* IM GUI */
+
+	// Start ImGui frame for directX and windows // See :https://github.com/ocornut/imgui/blob/master/imgui.cpp
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	imgui::NewFrame();
+
+
+	imgui::Begin("Tset");
+	imgui::End();
+	imgui::Render();
+	ImGui_ImplDX11_RenderDrawData(imgui::GetDrawData()); // draw the gui with directx
 
 	/* PRESENTING */
 
@@ -424,7 +452,7 @@ bool Graphics::initializeDirectX(HWND hwnd)
 
 	// Init fonts
 	spriteBatch = std::make_unique<dx::SpriteBatch>(this->deviceContext.Get());
-	spriteFont = std::make_unique<dx::SpriteFont>(this->device.Get(), L"Data/Fonts/lucida_console_16.spritefont");
+	spriteFont = std::make_unique<dx::SpriteFont>(this->device.Get(), L"Data/Fonts/proggy_clean_16.spritefont");
 
 	/* SAMPLER */
 

@@ -37,6 +37,10 @@ int APIENTRY wWinMain(
 			engine.RenderFrame();
 		}
 	}
+	/* END OF MAIN LOOP */
+
+
+	engine.Shutdown();
 
 
 	

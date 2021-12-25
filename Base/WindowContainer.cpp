@@ -25,9 +25,15 @@ WindowContainer::WindowContainer()
 	}
 }
 
+// external ImGui Function
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // Processes messages sent to the window
 LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	// call the external ImGui function to give gui interactivity
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		return true;
+
 	//OutputDebugStringA("WINDOW PROC FROM WINDOW CONTAINER\n");
 	switch (uMsg)
 	{

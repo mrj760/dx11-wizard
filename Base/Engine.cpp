@@ -85,3 +85,10 @@ void Engine::RenderFrame()
 {
 	gfx.renderFrame();
 }
+
+void Engine::Shutdown()
+{
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+}
