@@ -3,7 +3,7 @@ cbuffer constbuffer : register(b0) // use first buffer slot
 {
     // sort data so it comes out into chunks of 16 bytes if possible
     // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules
-    float4x4 mat; // 4x4 matrix
+    float4x4 matx; // 4x4 matrix
 };
 
 struct VS_INPUT
@@ -27,7 +27,7 @@ VS_OUTPUT main(VS_INPUT input)
 
     // Multiply the 1x4 matrix of our current position by another 4x4 matrix for translation/rotation/scaling/etc. operations
     // [x, y, z, 1] x 4x4 matrix
-    output.outPos = mul(float4(input.inPos, 1.0f), mat);    
+    output.outPos = mul(float4(input.inPos, 1.0f), matx);    
 
     output.outTexCoord = input.inTexCoord;
 

@@ -46,6 +46,9 @@ public:
 
 	HRESULT initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	{
+		if (buffer.Get() != nullptr)	// reset buffer for reuse instead of making a new one (mem leak)
+			buffer.Reset();
+
 		this->deviceContext = deviceContext; // save the device context
 
 		// Describe constant buffer

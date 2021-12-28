@@ -36,6 +36,9 @@ public:
 
 	HRESULT initialize(ID3D11Device* device, DWORD* data, UINT numIndeces)
 	{
+		if (buffer.Get() != nullptr) // reset the buffer if not null, avoid memory leak caused by init'ing new buffer on top of the current one
+			buffer.Reset();
+
 		bufferSize = numIndeces;
 
 		D3D11_BUFFER_DESC indexBufferDesc;

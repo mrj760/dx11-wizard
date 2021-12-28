@@ -1,3 +1,9 @@
+// constant buffer registered to first slot which stores alpha of a pixel
+cbuffer alphaBuffer : register(b0)
+{
+    float alpha;
+}
+
 // Pixel Shader Input
 struct PS_INPUT
 {
@@ -12,5 +18,5 @@ SamplerState objSamplerState : SAMPLER : register(s0);
 float4 main(PS_INPUT input) : SV_Target
 {
     float3 pixelColor = objTexture.Sample(objSamplerState, input.inTexCoord);
-    return float4(pixelColor, 1.0f);
+    return float4(pixelColor, alpha);
 }

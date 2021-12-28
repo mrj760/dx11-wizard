@@ -33,7 +33,7 @@ bool Graphics::initialize(HWND hwnd, int width, int height)
 
 void Graphics::renderFrame()
 {
-	/* TIMER */
+	/* fPS TIMER */
 	static int fpsCount = 0;
 	static std::string fpsStr = "FPS: 0";
 	fpsCount += 1;
@@ -44,64 +44,96 @@ void Graphics::renderFrame()
 		timer.restartTimer();
 	}
 
+	/* GUI */
+	// Start ImGui frame for directX and windows // See :https://github.com/ocornut/imgui/blob/master/imgui.cpp
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	imgui::NewFrame();
+	imgui::Begin("Test");
+
+	/* DEVICE CONTEXT */
+
 	/* BACKGROUND */
-
-	// Determine what background color will be
 	float bgcolor[] = { 0.1f, 0.1f, 0.1f, 1.0f }; // Grey background
-
 	/* CLEAR FRAME */
-	
-	// clear the render target (clear the window) and clear the depth stencil
-	this->deviceContext->ClearRenderTargetView(
-		this->renderTargetView.Get(), 
-		bgcolor);
-	this->deviceContext->ClearDepthStencilView(
-		this->depthStencilView.Get(), 
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, // Clear both depth and stencil
-		1.0f, // set depth to 1
-		0); // initialize stencil to 0
-
+	this->deviceContext->ClearRenderTargetView( this->renderTargetView.Get(), bgcolor);
+	this->deviceContext->ClearDepthStencilView( this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, /* Clear both depth and stencil */ 1.0f, /* set depth to 1 */ 0); /* initialize stencil to 0 (?) */
 	/* INPUT LAYOUT */
-
-	// set input layout
-	this->deviceContext-> 
-		IASetInputLayout(this->vertexshader.getInputLayout());
-	
+	this->deviceContext->IASetInputLayout(this->vertexshader.getInputLayout());
 	/* TOPOLOGY */
-
-	// set topology
-	this->deviceContext-> 
-		IASetPrimitiveTopology(
-			D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
+	this->deviceContext-> IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	/* RASTERIZER */
-	// set rasterizer state
-	this->deviceContext->
-		RSSetState(this->rasterizerState.Get());
-
+	this->deviceContext->RSSetState(this->rasterizerState.Get());
 	/* DEPTH STENCIL */
-	// set depth stencil state
 	this->deviceContext->OMSetDepthStencilState(depthStencilState.Get(), 0);
-
 	/* SAMPLER */
-
-	// Set sampler state
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
-
 	/* SHADERS */
+	this->deviceContext-> VSSetShader(vertexshader.getShader(), NULL, 0); // set vertex shader
+	this->deviceContext-> PSSetShader(pixelshader.getShader(), NULL, 0); // set pixel shader
+	/* BLEND STATE */
+	deviceContext->OMSetBlendState(blendState.Get(), NULL /*Not using blend factor*/, 0xFFFFFFFF);
 
-	// Set shaders
-	this->deviceContext-> // set vertex shader
-		VSSetShader(vertexshader.getShader(), NULL, 0);
-	this->deviceContext-> // set pixel shader
-		PSSetShader(pixelshader.getShader(), NULL, 0);
-	// set Shader Resources
-	this->deviceContext->PSSetShaderResources(0, 1, myTexture.GetAddressOf()); // shaders for our context
-	
+
+	static float alpha;
+	/* Face */
+	{
+		static dx::XMVECTOR tloffset = dx::XMVECTOR{ 0,0,0 };
+		static dx::XMVECTOR scaling = dx::XMVECTOR{ 5,5,5 };
+		// total = scaling * translation
+		static dx::XMMATRIX total = dx::XMMatrixScalingFromVector(scaling) * dx::XMMatrixTranslationFromVector(tloffset);
+		static UINT offset = 0;
+
+		// Update Constant Vertex Buffer
+		cb_vs_vertexshader.data.matx = total * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
+		cb_vs_vertexshader.data.matx = dx::XMMatrixTranspose(cb_vs_vertexshader.data.matx); // turn it from column_major to row_major format
+		if (!cb_vs_vertexshader.ApplyChanges()) return;
+		deviceContext->VSSetConstantBuffers(0, 1, cb_vs_vertexshader.getAddressOf()); // apply the changes to the constant buffer
+
+		// Update Constant Buffer Pixel Shader
+		cb_ps_pixelshader.data.alpha = 1.0f;
+		if (!cb_ps_pixelshader.ApplyChanges()) return;
+		deviceContext->PSSetConstantBuffers(0, 1, cb_ps_pixelshader.getAddressOf());
+
+		// Set texure
+		this->deviceContext->PSSetShaderResources(0, 1, face.GetAddressOf()); // shader resource (texture)
+		// Update Vertex Buffer : (start slot, # of buffers, pointers to buffers to use, stride length, pointer to offset)
+		this->deviceContext->IASetVertexBuffers(offset, 1, vertexBuffer.getAddressOf(), vertexBuffer.stridePtr(), &offset);
+		// Update Index Buffer
+		this->deviceContext->IASetIndexBuffer(indicesBuffer.get(), /*indices buffer to use*/ DXGI_FORMAT_R32_UINT, /*reading 32 bit uints*/ offset);
+		// Draw Index Buffer data : (# vert.s to draw, start slot, base vert. index)
+		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
+	}
+	/* Bird */
+	{
+		static dx::XMVECTOR tloffset = dx::XMVECTOR{ 0,0,-1 };
+		static dx::XMVECTOR scaling = dx::XMVECTOR{ 2,2,2 };
+		// total = scaling * translation
+		static dx::XMMATRIX total = dx::XMMatrixScalingFromVector(scaling) * dx::XMMatrixTranslationFromVector(tloffset);
+		static UINT offset = 0;
+
+		// Update Constant Vertex Buffer
+		cb_vs_vertexshader.data.matx = total * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
+		cb_vs_vertexshader.data.matx = dx::XMMatrixTranspose(cb_vs_vertexshader.data.matx); // turn it from column_major to row_major format
+		if (!cb_vs_vertexshader.ApplyChanges()) return;
+		deviceContext->VSSetConstantBuffers(0, 1, cb_vs_vertexshader.getAddressOf()); // apply the changes to the constant buffer
+
+		// Update Constant Buffer Pixel Shader
+		cb_ps_pixelshader.data.alpha = alpha;
+		if (!cb_ps_pixelshader.ApplyChanges()) return;
+		deviceContext->PSSetConstantBuffers(0, 1, cb_ps_pixelshader.getAddressOf());
+
+		// Set texure
+		this->deviceContext->PSSetShaderResources(0, 1, bird.GetAddressOf()); // shader resource (texture)
+		// Update Vertex Buffer : (start slot, # of buffers, pointers to buffers to use, stride length, pointer to offset)
+		this->deviceContext->IASetVertexBuffers(offset, 1, vertexBuffer.getAddressOf(), vertexBuffer.stridePtr(), &offset);
+		// Update Index Buffer
+		this->deviceContext->IASetIndexBuffer(indicesBuffer.get(), /*indices buffer to use*/ DXGI_FORMAT_R32_UINT, /*reading 32 bit uints*/ offset);
+		// Draw Index Buffer data : (# vert.s to draw, start slot, base vert. index)
+		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
+	}
+
 	/* CAMERA */
-
-	dx::XMMATRIX worldOrigin = dx::XMMatrixIdentity(); // world origin
-
 	// move cam up and down
 	/*f3 campos = cam.getpositionFloat3();
 	static bool down = true, right = true;
@@ -110,67 +142,41 @@ void Graphics::renderFrame()
 	if (campos.x < -1.5f || campos.x > 1.5f)
 		right = !right;
 	cam.adjustPosition(
-		right ? 0.01f : -0.01f, 
-		down ? 0.01f : -0.01f, 
+		right ? 0.01f : -0.01f,
+		down ? 0.01f : -0.01f,
 		0.0f);
 	cam.setTargetPos(f3(0.f, 0.f, 0.f));*/
 
-	/* BUFFERS */
-
-	// Update Constant Buffer
-	constantBuffer.data.mat = worldOrigin * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
-	constantBuffer.data.mat = dx::XMMatrixTranspose(constantBuffer.data.mat); // turn it from column_major to row_major format
-	if (!constantBuffer.ApplyChanges())
-		return;
-	deviceContext-> // apply the changes to the constant buffer
-		VSSetConstantBuffers(0, 1, constantBuffer.getAddressOf());
-
-	// Update Vertex Buffer
-	UINT offset = 0;	// at which slot to begin when reading in the vertex buffer data
-	this->deviceContext->IASetVertexBuffers( // vertices for our context
-		0,								// start slot
-		1,								// for now: only one buffer 
-		vertexBuffer.getAddressOf(),	// vertex buffer to use
-		vertexBuffer.stridePtr(),		// how big of a data size to iterate over
-		&offset);						// at which slot to begin when reading in the vertex buffer data
-
-	// Update Index Buffer
-	this->deviceContext->IASetIndexBuffer( // indices for our context
-		indicesBuffer.get(), // indeces buffer to use
-		DXGI_FORMAT_R32_UINT, // reading 32 bit uints
-		0); // no offset
-
-	/* DRAWING */
 	
-	// Draw Index Buffer data
-	this->deviceContext->DrawIndexed(
-		indicesBuffer.getBufferSize(), // # of vertices to draw
-		0, // initial vertex index
-		0); // base vertex index
 
 	// Draw Text "Hello World" and the FPS at top left
 	spriteBatch->Begin();
 	std::wstring str = L"Hello World\nFPS: " + StringConverter::StringToWide(fpsStr);
-	spriteFont->DrawString(
-		spriteBatch.get(), 
-		str.c_str(),
-		dx::XMFLOAT2(0, 5), // position
-		dx::Colors::Bisque, // color
-		0,					// rotation
-		dx::XMFLOAT2(0, 0), // origin
-		dx::XMFLOAT2(1,1)	// scale
-		);					// default effects and layer depth parameters
+	// Position, color, rotation, origin, scale... default effects and layer depth parameters
+	spriteFont->DrawString( spriteBatch.get(), str.c_str(), dx::XMFLOAT2(0, 5), dx::Colors::Bisque, 0, dx::XMFLOAT2(0, 0), dx::XMFLOAT2(1,1));
 	spriteBatch->End();
 
 	/* IM GUI */
 
-	// Start ImGui frame for directX and windows // See :https://github.com/ocornut/imgui/blob/master/imgui.cpp
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	imgui::NewFrame();
+	// ur gay button
+	static int counter = 0;
+	imgui::Text("oi boi");
+	if (imgui::Button("oi boi cliq me eh"))
+	{
+		counter += 1;
+	}
+	imgui::SameLine();
+	std::string haha = counter > 0 ? "ur gay" : "";
+	if (counter > 1)
+	{
+		haha += 'x' + std::to_string(counter);
+	}
+	imgui::Text(haha.c_str());
 
+	// slider to control alpha of texture
+	imgui::DragFloat("Alpha", &alpha, 0.1f, 0.0f, 1.0f);
 
-	imgui::Begin("Tset");
+	// imgui finished
 	imgui::End();
 	imgui::Render();
 	ImGui_ImplDX11_RenderDrawData(imgui::GetDrawData()); // draw the gui with directx
@@ -448,6 +454,44 @@ bool Graphics::initializeDirectX(HWND hwnd)
 		return false;
 	}
 
+	/* BLENDING */
+
+	// Create Blend State
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+	
+	D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+	ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
+	
+	rtbd.BlendEnable = true;	// enable blending
+
+	// (Final color) = [(Source pixel) * (Source Blend Factor)] + [(Destination pixel) * (Destination Blend Factor)]
+	// Multiply the source pixel color by its alpha, and add it to the destination color multiplied by the inverse of the source alpha
+	// ex: source:(0, 1, 0, .9), dest:(1,0,0,1) ... final color is (0, (1 * 0.9), 0) + ((1 * (1-.9)), 0, 0) = (0,.9,0) + (.1,0,0) = (0.1, 0.9, 0)
+	rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;	// base the source color on the source alpha
+	rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;	// base the destination alpha on the source alpha
+	rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;	// add the two colors together
+
+	// (Final alpha) = [(Source alpha) * (Source blend factor)] + [(Destination alpha) * (Destination blend factor)]
+	// With values set below...	(Final alpha) =	(Source alpha)
+	rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;	// multiply source-blend-alpha by 1 (same thing as it already was)
+	rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ZERO;	// Do not take into account (looking at equation above, this value being set to 0 makes the dest. blend alpha meaningless)
+	rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;	// add the two alphas together
+	rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;	// take into account red, green, blue, and alpha levels (all)
+
+	
+
+	
+
+	blendDesc.RenderTarget[0] = rtbd; // only have one render target
+
+	hr = device->CreateBlendState(&blendDesc, blendState.GetAddressOf()); // Create the blend state from the description
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create blend state.");
+		return false;
+	}
+
 	/* FONTS */
 
 	// Init fonts
@@ -501,16 +545,16 @@ bool Graphics::initializeScene()
 		return false;
 	}
 
-	/* INDECES BUFFER (of vertices) */
+	/* INDICES BUFFER (of vertices) */
 
-	// Create Indeces Array
+	// Create Indices Array
 	DWORD indices[]
 	{
 		0,1,2,
 		0,2,3,
-	};// using indeces fixes reusing multiple instances of the same vertex data when drawing pixels
+	};// using indices fixes reusing multiple instances of the same vertex data when drawing pixels
 	
-	// Create description for indeces buffer
+	// Create description for indices buffer
 	hr = indicesBuffer.initialize(device.Get(), indices, ARRAYSIZE(indices));
 
 	if (FAILED(hr))
@@ -521,10 +565,36 @@ bool Graphics::initializeScene()
 
 	/* TEXTURE LOADING */
 
-	// Load a texture
+	// Load face texture
 	hr = dx::CreateWICTextureFromFile(
-		this->device.Get(), L"Data/Textures/boi.png", nullptr, myTexture.GetAddressOf());
+		this->device.Get(), L"Data/Textures/boi.png", nullptr, face.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create wic texture from file");
+		return false;
+	}
 
+	// Load blue texture
+	hr = dx::CreateWICTextureFromFile(
+		this->device.Get(), L"Data/Textures/blue.png", nullptr, blue.GetAddressOf()); 
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create wic texture from file");
+		return false;
+	}
+
+	// Load bird texture
+	hr = dx::CreateWICTextureFromFile(
+		this->device.Get(), L"Data/Textures/bird.png", nullptr, bird.GetAddressOf()); 
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create wic texture from file");
+		return false;
+	}
+
+	// Load water texture
+	hr = dx::CreateWICTextureFromFile(
+		this->device.Get(), L"Data/Textures/water.png", nullptr, water.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to create wic texture from file");
@@ -532,7 +602,13 @@ bool Graphics::initializeScene()
 	}
 
 	/* CONSTANT BUFFER(S) */
-	hr = constantBuffer.initialize(device.Get(), deviceContext.Get());
+	hr = cb_vs_vertexshader.initialize(device.Get(), deviceContext.Get());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to init constant buffer");
+		return false;
+	}
+	hr = cb_ps_pixelshader.initialize(device.Get(), deviceContext.Get());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to init constant buffer");

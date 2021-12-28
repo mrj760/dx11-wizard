@@ -54,8 +54,12 @@ public:
 
 	HRESULT initialize(ID3D11Device* device, T* data, UINT numVertices)
 	{
+		if (buffer.Get() != nullptr) // reset the buffer so it can be reused and we don't have to create a new one (mem leak)
+			buffer.Reset();
+		else // set stride length if this is the first time making the vertex buffer
+			stride = std::make_unique<UINT>(sizeof(T));
+
 		bufferSize = numVertices;
-		stride = std::make_unique<UINT>(sizeof(T));
 
 		D3D11_BUFFER_DESC vertexBufferDesc;
 		ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));

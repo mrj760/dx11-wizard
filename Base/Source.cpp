@@ -6,21 +6,6 @@ int APIENTRY wWinMain(
 	_In_ LPWSTR		lpCmdLine,
 	_In_ int		nCmdShow)
 {
-	/* Testing Error Logging */
-	//ErrorLogger::Log(S_OK, "Task Failed Successfully"); // tells "The operation completed successfully"
-	//ErrorLogger::Log(E_INVALIDARG, "Test Message"); // tells "The parameter was incorrect"
-	//HRESULT hr = E_INVALIDARG;
-	//if (FAILED(hr))
-	//{
-	//	ErrorLogger::Log(hr, "Test Failure"); // Logs the error of an invalid HRESULT
-	//}
-	//HRESULT hr = S_OK;
-	//if (SUCCEEDED(hr))
-	//{
-	//	MessageBoxA(NULL, "Success", "Success", NULL); // Just produces a message box saying success
-	//	//ErrorLogger::Log(hr, "Test Success"); // Logs the error of a successful HRESULT
-	//}
-
 	// Create and initialize window
 	HRESULT hr = CoInitialize(NULL);
 	if (FAILED(hr))
@@ -31,7 +16,7 @@ int APIENTRY wWinMain(
 	Engine engine;
 	if (engine.Initialize(hInstance, "Title", "MyWindowClass", 800, 600));
 	{
-		while (engine.ProcessMessages())	// keep processing messages from our render window until our message processor says the window has been closed
+		while (engine.ProcessMessages()) // keep processing messages from our render window until our message processor says the window has been closed
 		{
 			engine.Update();
 			engine.RenderFrame();

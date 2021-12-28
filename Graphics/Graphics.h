@@ -62,7 +62,8 @@ private:
 	// Shaders
 	VertexShader vertexshader;
 	PixelShader pixelshader;
-	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
+	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
+	ConstantBuffer<CB_PS_pixelshader> cb_ps_pixelshader;
 
 	// Vertex buffer(s)
 	VertexBuffer<Vertex> vertexBuffer;
@@ -79,6 +80,9 @@ private:
 	// Rasterizer state
 	mwrl::ComPtr<ID3D11RasterizerState> rasterizerState;
 
+	// Blend state
+	mwrl::ComPtr<ID3D11BlendState> blendState;
+
 	// Font stuff
 	std::unique_ptr<dx::SpriteBatch> spriteBatch;
 	std::unique_ptr<dx::SpriteFont> spriteFont;
@@ -87,6 +91,9 @@ private:
 	mwrl::ComPtr<ID3D11SamplerState> samplerState;
 
 	// Shader resource (texture)
-	mwrl::ComPtr<ID3D11ShaderResourceView> myTexture;
+	mwrl::ComPtr<ID3D11ShaderResourceView> face;
+	mwrl::ComPtr<ID3D11ShaderResourceView> bird;
+	mwrl::ComPtr<ID3D11ShaderResourceView> water;
+	mwrl::ComPtr<ID3D11ShaderResourceView> blue;
 };
 
