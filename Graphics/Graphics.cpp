@@ -63,7 +63,7 @@ void Graphics::renderFrame()
 	/* TOPOLOGY */
 	this->deviceContext-> IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	/* RASTERIZER */
-	this->deviceContext->RSSetState(this->rasterizerState.Get());
+	//this->deviceContext->RSSetState(this->rasterizerBack.Get());
 	/* DEPTH STENCIL */
 	this->deviceContext->OMSetDepthStencilState(depthStencilState.Get(), 0);
 	/* SAMPLER */
@@ -75,36 +75,8 @@ void Graphics::renderFrame()
 	deviceContext->OMSetBlendState(blendState.Get(), NULL /*Not using blend factor*/, 0xFFFFFFFF);
 
 
-	static float alpha;
-	/* Face */
-	{
-		static dx::XMVECTOR tloffset = dx::XMVECTOR{ 0,0,0 };
-		static dx::XMVECTOR scaling = dx::XMVECTOR{ 5,5,5 };
-		// total = scaling * translation
-		static dx::XMMATRIX total = dx::XMMatrixScalingFromVector(scaling) * dx::XMMatrixTranslationFromVector(tloffset);
-		static UINT offset = 0;
-
-		// Update Constant Vertex Buffer
-		cb_vs_vertexshader.data.matx = total * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
-		cb_vs_vertexshader.data.matx = dx::XMMatrixTranspose(cb_vs_vertexshader.data.matx); // turn it from column_major to row_major format
-		if (!cb_vs_vertexshader.ApplyChanges()) return;
-		deviceContext->VSSetConstantBuffers(0, 1, cb_vs_vertexshader.getAddressOf()); // apply the changes to the constant buffer
-
-		// Update Constant Buffer Pixel Shader
-		cb_ps_pixelshader.data.alpha = 1.0f;
-		if (!cb_ps_pixelshader.ApplyChanges()) return;
-		deviceContext->PSSetConstantBuffers(0, 1, cb_ps_pixelshader.getAddressOf());
-
-		// Set texure
-		this->deviceContext->PSSetShaderResources(0, 1, face.GetAddressOf()); // shader resource (texture)
-		// Update Vertex Buffer : (start slot, # of buffers, pointers to buffers to use, stride length, pointer to offset)
-		this->deviceContext->IASetVertexBuffers(offset, 1, vertexBuffer.getAddressOf(), vertexBuffer.stridePtr(), &offset);
-		// Update Index Buffer
-		this->deviceContext->IASetIndexBuffer(indicesBuffer.get(), /*indices buffer to use*/ DXGI_FORMAT_R32_UINT, /*reading 32 bit uints*/ offset);
-		// Draw Index Buffer data : (# vert.s to draw, start slot, base vert. index)
-		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
-	}
-	/* Bird */
+	static float alpha = 0.3f;
+	/* Blue */
 	{
 		static dx::XMVECTOR tloffset = dx::XMVECTOR{ 0,0,-1 };
 		static dx::XMVECTOR scaling = dx::XMVECTOR{ 2,2,2 };
@@ -124,12 +96,16 @@ void Graphics::renderFrame()
 		deviceContext->PSSetConstantBuffers(0, 1, cb_ps_pixelshader.getAddressOf());
 
 		// Set texure
-		this->deviceContext->PSSetShaderResources(0, 1, bird.GetAddressOf()); // shader resource (texture)
+		this->deviceContext->PSSetShaderResources(0, 1, blue.GetAddressOf()); // shader resource (texture)
 		// Update Vertex Buffer : (start slot, # of buffers, pointers to buffers to use, stride length, pointer to offset)
 		this->deviceContext->IASetVertexBuffers(offset, 1, vertexBuffer.getAddressOf(), vertexBuffer.stridePtr(), &offset);
 		// Update Index Buffer
 		this->deviceContext->IASetIndexBuffer(indicesBuffer.get(), /*indices buffer to use*/ DXGI_FORMAT_R32_UINT, /*reading 32 bit uints*/ offset);
-		// Draw Index Buffer data : (# vert.s to draw, start slot, base vert. index)
+
+		// Rasterize and draw the front sizes then the back sides
+		this->deviceContext->RSSetState(this->rasterizerFront.Get());
+		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
+		this->deviceContext->RSSetState(this->rasterizerBack.Get());
 		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
 	}
 
@@ -439,14 +415,29 @@ bool Graphics::initializeDirectX(HWND hwnd)
 
 	/* RASTERIZER */
 
-	// Create rasterizer state
-	D3D11_RASTERIZER_DESC rasterizerDesc;
-	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
-	rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID; // solid fill (as opposed to wireframe)
-	rasterizerDesc.CullMode= D3D11_CULL_MODE::D3D11_CULL_BACK; // don't draw back-facing triangles 
+	// Create rasterizer state for back
+	D3D11_RASTERIZER_DESC rasterizerDescBack;
+	ZeroMemory(&rasterizerDescBack, sizeof(D3D11_RASTERIZER_DESC));
+	rasterizerDescBack.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID; // solid fill (as opposed to wireframe)
+	rasterizerDescBack.CullMode= D3D11_CULL_MODE::D3D11_CULL_BACK; // don't draw back-facing triangles 
 																// (clockwise pixels : front-facing, counter-clockwise : back-facing)
 	hr = this->device->CreateRasterizerState(
-		&rasterizerDesc, this->rasterizerState.GetAddressOf());
+		&rasterizerDescBack, this->rasterizerBack.GetAddressOf());
+
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to create rasterizer state");
+		return false;
+	}
+
+	// Create rasterizer state for front culling
+	D3D11_RASTERIZER_DESC rasterizerDescFront;
+	ZeroMemory(&rasterizerDescFront, sizeof(D3D11_RASTERIZER_DESC));
+	rasterizerDescFront.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID; // solid fill (as opposed to wireframe)
+	rasterizerDescFront.CullMode = D3D11_CULL_MODE::D3D11_CULL_FRONT; // don't draw back-facing triangles 
+																// (clockwise pixels : front-facing, counter-clockwise : back-facing)
+	hr = this->device->CreateRasterizerState(
+		&rasterizerDescFront, this->rasterizerFront.GetAddressOf());
 
 	if (FAILED(hr))
 	{
@@ -527,11 +518,17 @@ bool Graphics::initializeScene()
 	// Textured Square
 	Vertex v[] =
 	{
-		Vertex(-0.5f,  -0.5f, 0.0f, 0.0f, 1.0f), //Bottom Left - [0]
-		Vertex(-0.5f,   0.5f, 0.0f, 0.0f, 0.0f), //Top Left - [1]
-		Vertex(0.5f,   0.5f, 0.0f, 1.0f, 0.0f), //Top Right - [2]
-		Vertex(0.5f,  -0.5f, 0.0f, 1.0f, 1.0f), //Bottom Right - [3]
-		//Vertex(-0.5f, -0.5f, 1.0f, 0.0f, 1.0f), //Bottom Left  // --repeat
+		// Front
+		Vertex(-0.5f,  -0.5f, -0.5f, 0.0f, 1.0f),	//Bottom Left - [0]
+		Vertex(-0.5f,   0.5f, -0.5f, 0.0f, 0.0f),	//Top Left - [1]
+		Vertex(0.5f,   0.5f, -0.5f, 1.0f, 0.0f),		//Top Right - [2]
+		Vertex(0.5f,  -0.5f, -0.5f, 1.0f, 1.0f),		//Bottom Right - [3]
+
+		// Back
+		Vertex(-0.5f,  -0.5f, 0.5f, 0.0f, 1.0f),	//Bottom Left - [4]
+		Vertex(-0.5f,   0.5f, 0.5f, 0.0f, 0.0f),	//Top Left - [5]
+		Vertex(0.5f,   0.5f, 0.5f, 1.0f, 0.0f),		//Top Right - [6]
+		Vertex(0.5f,  -0.5f, 0.5f, 1.0f, 1.0f),		//Bottom Right - [7]
 	};
 
 	/* VERTEX BUFFER */
@@ -550,8 +547,25 @@ bool Graphics::initializeScene()
 	// Create Indices Array
 	DWORD indices[]
 	{
+		// FRONT
 		0,1,2,
 		0,2,3,
+		// LEFT
+		4,5,1,
+		4,1,0,
+		// RIGHT
+		3,2,6,
+		3,6,7,
+		// TOP
+		1,5,6,
+		1,6,2,
+		// BOTTOM
+		3,7,4,
+		3,4,0,
+		// BACK
+		7,6,5,
+		7,5,4,
+
 	};// using indices fixes reusing multiple instances of the same vertex data when drawing pixels
 	
 	// Create description for indices buffer

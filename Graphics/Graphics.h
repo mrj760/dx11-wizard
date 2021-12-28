@@ -78,7 +78,8 @@ private:
 	mwrl::ComPtr<ID3D11DepthStencilState> depthStencilState;
 
 	// Rasterizer state
-	mwrl::ComPtr<ID3D11RasterizerState> rasterizerState;
+	mwrl::ComPtr<ID3D11RasterizerState> rasterizerBack;
+	mwrl::ComPtr<ID3D11RasterizerState> rasterizerFront;
 
 	// Blend state
 	mwrl::ComPtr<ID3D11BlendState> blendState;
