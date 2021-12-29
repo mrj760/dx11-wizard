@@ -8,6 +8,7 @@
 #define VertexVuffer_h__
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <memory>
 
 namespace mwrl = Microsoft::WRL;
 

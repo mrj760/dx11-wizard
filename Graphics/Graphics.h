@@ -9,19 +9,16 @@
 #pragma once
 #include "AdapterReader.h"
 #include "Shaders.h"
-#include "Vertex.h"
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
 #include <WICTextureLoader.h>
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "ConstantBuffer.h"
 #include "ConstantBufferTypes.h"
 #include "Camera.h"
 #include "../Base/Timer.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
+#include "Model.h"
 
 namespace mwrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -65,12 +62,8 @@ private:
 	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
 	ConstantBuffer<CB_PS_pixelshader> cb_ps_pixelshader;
 
-	// Vertex buffer(s)
-	VertexBuffer<Vertex> vertexBuffer;
-
-	// Indeces buffer for vertex data
-	//mwrl::ComPtr<ID3D11Buffer> indecesBuffer;
-	IndexBuffer indicesBuffer;
+	// Model
+	Model model;
 
 	// Depth stencil
 	mwrl::ComPtr<ID3D11DepthStencilView> depthStencilView;

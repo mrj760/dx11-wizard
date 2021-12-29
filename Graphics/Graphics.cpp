@@ -70,42 +70,13 @@ void Graphics::renderFrame()
 	this->deviceContext-> VSSetShader(vertexshader.getShader(), NULL, 0); // set vertex shader
 	this->deviceContext-> PSSetShader(pixelshader.getShader(), NULL, 0); // set pixel shader
 	/* BLEND STATE */
-	deviceContext->OMSetBlendState(blendState.Get(), NULL /*Not using blend factor*/, 0xFFFFFFFF);
+	deviceContext->OMSetBlendState(NULL, NULL /*Not using blend factor*/, 0xFFFFFFFF);
 
 	/* DRAWING */
 
-	static float alpha = 0.3f;
 	/* Blue */
 	{
-		static dx::XMVECTOR tloffset = dx::XMVECTOR{ 0,0,-1 };
-		static dx::XMVECTOR scaling = dx::XMVECTOR{ 2,2,2 };
-		// total = scaling * translation
-		static dx::XMMATRIX total = dx::XMMatrixScalingFromVector(scaling) * dx::XMMatrixTranslationFromVector(tloffset);
-		static UINT offset = 0;
-
-		// Update Constant Vertex Buffer
-		cb_vs_vertexshader.data.matx = total * cam.getViewMatrix() * cam.getProjectionMatrix(); // all vertices set to (world origin* view * projection)
-		cb_vs_vertexshader.data.matx = dx::XMMatrixTranspose(cb_vs_vertexshader.data.matx); // turn it from column_major to row_major format
-		if (!cb_vs_vertexshader.ApplyChanges()) return;
-		deviceContext->VSSetConstantBuffers(0, 1, cb_vs_vertexshader.getAddressOf()); // apply the changes to the constant buffer
-
-		// Update Constant Buffer Pixel Shader
-		cb_ps_pixelshader.data.alpha = alpha;
-		if (!cb_ps_pixelshader.ApplyChanges()) return;
-		deviceContext->PSSetConstantBuffers(0, 1, cb_ps_pixelshader.getAddressOf());
-
-		// Set texure
-		this->deviceContext->PSSetShaderResources(0, 1, blue.GetAddressOf()); // shader resource (texture)
-		// Update Vertex Buffer : (start slot, # of buffers, pointers to buffers to use, stride length, pointer to offset)
-		this->deviceContext->IASetVertexBuffers(offset, 1, vertexBuffer.getAddressOf(), vertexBuffer.stridePtr(), &offset);
-		// Update Index Buffer
-		this->deviceContext->IASetIndexBuffer(indicesBuffer.get(), /*indices buffer to use*/ DXGI_FORMAT_R32_UINT, /*reading 32 bit uints*/ offset);
-
-		// Rasterize and draw the front sizes then the back sides
-		this->deviceContext->RSSetState(this->rasterizerFront.Get());
-		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
-		this->deviceContext->RSSetState(this->rasterizerBack.Get());
-		this->deviceContext->DrawIndexed(indicesBuffer.getBufferSize(), 0, 0);
+		model.draw(cam.getViewMatrix() * cam.getProjectionMatrix());
 	}
 
 	// Draw Text "Hello World" and the FPS at top left
@@ -146,9 +117,6 @@ void Graphics::renderFrame()
 		haha += 'x' + std::to_string(counter);
 	}
 	imgui::Text(haha.c_str());
-
-	// slider to control alpha of texture
-	imgui::DragFloat("Alpha", &alpha, 0.1f, 0.0f, 1.0f);
 
 	// imgui finished
 	imgui::End();
@@ -416,62 +384,12 @@ bool Graphics::initializeScene()[[]]
 {	
 	try
 	{
-		// Textured Square
-		Vertex v[] =
-		{
-			// Front
-			Vertex(-0.5f,  -0.5f, -0.5f, 0.0f, 1.0f),	//Bottom Left - [0]
-			Vertex(-0.5f,   0.5f, -0.5f, 0.0f, 0.0f),	//Top Left - [1]
-			Vertex(0.5f,   0.5f, -0.5f, 1.0f, 0.0f),		//Top Right - [2]
-			Vertex(0.5f,  -0.5f, -0.5f, 1.0f, 1.0f),		//Bottom Right - [3]
-
-			// Back
-			Vertex(-0.5f,  -0.5f, 0.5f, 0.0f, 1.0f),	//Bottom Left - [4]
-			Vertex(-0.5f,   0.5f, 0.5f, 0.0f, 0.0f),	//Top Left - [5]
-			Vertex(0.5f,   0.5f, 0.5f, 1.0f, 0.0f),		//Top Right - [6]
-			Vertex(0.5f,  -0.5f, 0.5f, 1.0f, 1.0f),		//Bottom Right - [7]
-		};
-
-		/* VERTEX BUFFER */
-
-		// Create vertex buffer
-		HRESULT hr = this->vertexBuffer.initialize(this->device.Get(), v, ARRAYSIZE(v));
-		COM_ERROR_IF_FAILED(hr, "Failed to create vertex buffer");
-
-		/* INDICES BUFFER (of vertices) */
-
-		// Create Indices Array
-		DWORD indices[]
-		{
-			// FRONT
-			0,1,2,
-			0,2,3,
-			// LEFT
-			4,5,1,
-			4,1,0,
-			// RIGHT
-			3,2,6,
-			3,6,7,
-			// TOP
-			1,5,6,
-			1,6,2,
-			// BOTTOM
-			4,0,3,
-			4,3,7,
-			// BACK
-			7,6,5,
-			7,5,4,
-
-		};// using indices fixes reusing multiple instances of the same vertex data when drawing pixels
-
-		// Create description for indices buffer
-		hr = indicesBuffer.initialize(device.Get(), indices, ARRAYSIZE(indices));
-		COM_ERROR_IF_FAILED(hr, "Failed to create indices buffer");
+		
 
 		/* TEXTURE LOADING */
 
 		// Load face texture
-		hr = dx::CreateWICTextureFromFile(this->device.Get(), L"Data/Textures/boi.png", nullptr, face.GetAddressOf());
+		HRESULT hr = dx::CreateWICTextureFromFile(this->device.Get(), L"Data/Textures/boi.png", nullptr, face.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create texture from file");
 
 		// Load blue texture
@@ -492,6 +410,10 @@ bool Graphics::initializeScene()[[]]
 
 		hr = cb_ps_pixelshader.initialize(device.Get(), deviceContext.Get());
 		COM_ERROR_IF_FAILED(hr, "Failed to init constant buffer");
+
+		/* MODELS */
+		if (!model.initialize(device.Get(), deviceContext.Get(), blue.Get(), cb_vs_vertexshader))
+			return false;
 
 		cam.setPosition(0.0f, 0.0f, -2.0f);
 		cam.setProjectionValues(90.0f /*FOV*/, (float)width / (float)height /*Aspect Ratio*/, 0.1f/*near Z*/, 1000.0f/*far Z*/);
