@@ -30,3 +30,10 @@ void ErrorLogger::Log(HRESULT hr, std::wstring message)
 	// Produce an error window using MessageBoxW (W: uses Wide-String)
 	MessageBoxW(NULL, error_message.c_str(), L"Error", MB_ICONERROR);	// (Parent window, message text, title, message box type)
 }
+
+void ErrorLogger::Log(COMException& e)
+{
+	// Get error message and pass it to message box
+	std::wstring emsg = e.what();
+	MessageBoxW(NULL, emsg.c_str(), L"Error", MB_ICONERROR);
+}

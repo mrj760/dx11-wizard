@@ -175,6 +175,7 @@
     <ClCompile Include="Base\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Base\COMException.h" />
     <ClInclude Include="Graphics\Camera.h" />
     <ClInclude Include="Graphics\ConstantBuffer.h" />
     <ClInclude Include="Graphics\ConstantBufferTypes.h" />

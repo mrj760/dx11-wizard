@@ -13,6 +13,7 @@ int APIENTRY wWinMain(
 		ErrorLogger::Log(hr, "CoInitialize failed.");
 		exit(-1);
 	}
+
 	Engine engine;
 	if (engine.Initialize(hInstance, "Title", "MyWindowClass", 800, 600));
 	{
