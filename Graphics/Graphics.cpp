@@ -103,21 +103,6 @@ void Graphics::renderFrame()
 
 	/* IM GUI */
 
-	// ur gay button
-	static int counter = 0;
-	imgui::Text("oi boi");
-	if (imgui::Button("oi boi cliq me eh"))
-	{
-		counter += 1;
-	}
-	imgui::SameLine();
-	std::string haha = counter > 0 ? "ur gay" : "";
-	if (counter > 1)
-	{
-		haha += 'x' + std::to_string(counter);
-	}
-	imgui::Text(haha.c_str());
-
 	// imgui finished
 	imgui::End();
 	imgui::Render();
