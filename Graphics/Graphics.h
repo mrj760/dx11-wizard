@@ -31,6 +31,8 @@ public:
 	void renderFrame();
 	// Camera
 	Camera cam;
+	// Model - Temporarily here
+	Model model;
 
 private:
 	bool initializeShaders();
@@ -61,9 +63,6 @@ private:
 	PixelShader pixelshader;
 	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
 	ConstantBuffer<CB_PS_pixelshader> cb_ps_pixelshader;
-
-	// Model
-	Model model;
 
 	// Depth stencil
 	mwrl::ComPtr<ID3D11DepthStencilView> depthStencilView;

@@ -32,14 +32,17 @@ public:
 
 	// Position Adjustment
 	void adjustPosition(const vec& pos);
+	void adjustPosition(const f3& pos);
 	void adjustPosition(float x, float y, float z);
 
 	// Rotation Sets
 	void setRotation(const vec& rot);
+	void setRotation(const f3& pos);
 	void setRotation(float x, float y, float z);
 
 	// Adjustment Rotations
 	void adjustRotation(const vec& rot);
+	void adjustRotation(const f3& pos);
 	void adjustRotation(float x, float y, float z);
 
 	// Look-At Set

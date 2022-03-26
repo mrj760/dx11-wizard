@@ -365,12 +365,10 @@ bool Graphics::initializeDirectX(HWND hwnd)
 	return true;
 }
 
-bool Graphics::initializeScene()[[]]
+bool Graphics::initializeScene()
 {	
 	try
 	{
-		
-
 		/* TEXTURE LOADING */
 
 		// Load face texture
@@ -400,8 +398,10 @@ bool Graphics::initializeScene()[[]]
 		if (!model.initialize(device.Get(), deviceContext.Get(), blue.Get(), cb_vs_vertexshader))
 			return false;
 
-		cam.setPosition(0.0f, 0.0f, -2.0f);
+		model.setPosition(0.f, 0.f, 2.f);
+		cam.setPosition(0.0f, 0.0f, 0.0f);
 		cam.setProjectionValues(90.0f /*FOV*/, (float)width / (float)height /*Aspect Ratio*/, 0.1f/*near Z*/, 1000.0f/*far Z*/);
+
 	}
 	catch (COMException& e)
 	{

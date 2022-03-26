@@ -52,6 +52,9 @@ void Engine::Update()
 		}
 	}
 
+	// /* TEMP */Rotate test model around the y axis slowly
+	this->gfx.model.adjustRotation(0.f, 0.001f * dt, 0.f);
+
 	/* CAMERA */
 	const float camspeed = 0.002f;
 

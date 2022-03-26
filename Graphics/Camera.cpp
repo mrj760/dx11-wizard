@@ -72,41 +72,69 @@ void Camera::adjustPosition(const vec& pos)
 	updateViewMatrix();
 }
 
+void Camera::adjustPosition(const f3& pos)
+{
+	this->pos.x += pos.x;
+	this->pos.x += pos.x;
+	this->pos.z += pos.z;
+
+	XMStoreFloat3(&this->pos, posVec);
+	updateViewMatrix();
+}
+
 void Camera::adjustPosition(float x, float y, float z)
 {
 	pos = f3(pos.x + x, pos.y + y, pos.z + z);
+	
 	posVec = XMLoadFloat3(&pos);
-
 	updateViewMatrix();
 }
 
 void Camera::setRotation(const vec& rot)
 {
-	rotVec = rot;
-	XMStoreFloat3(&this->rot, rot);
+	this->rotVec = rot;
+	XMStoreFloat3(&this->rot, this->rotVec);
+}
+
+void Camera::setRotation(const f3& rot)
+{
+	this->rot = rot;
+
+	XMStoreFloat3(&this->rot, this->rotVec);
+	updateViewMatrix();
 }
 
 void Camera::setRotation(float x, float y, float z)
 {
-	rot = f3(x, y, z);
-	rotVec = XMLoadFloat3(&rot);
+	this->rot = f3(x, y, z);
+	this->rotVec = XMLoadFloat3(&this->rot);
 
 	updateViewMatrix();
 }
 
 void Camera::adjustRotation(const vec& rot)
 {
-	rotVec += rot;
-	XMStoreFloat3(&this->rot, rot);
+	this->rotVec += rot;
+	
+	XMStoreFloat3(&this->rot, this->rotVec);
+	updateViewMatrix();
+}
 
+void Camera::adjustRotation(const f3& rot)
+{
+	this->rot.x += rot.x;
+	this->rot.y += rot.y;
+	this->rot.z += rot.z;
+
+	this->rotVec = XMLoadFloat3(&this->rot);
 	updateViewMatrix();
 }
 
 void Camera::adjustRotation(float x, float y, float z)
 {
 	rot = f3(rot.x + x, rot.y + y, rot.z + z);
-	rotVec = XMLoadFloat3(&rot);
-
+	
+	this->rotVec = XMLoadFloat3(&this->rot);
 	updateViewMatrix();
 }
 // Set where to look
